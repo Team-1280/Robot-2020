@@ -12,7 +12,7 @@ public class Limelight extends SubsystemBase{
     private NetworkTableEntry tx,ty,ta; 
 
     public final double realDistance = 31.25; // 18 inches, 28 inches
-    public final double limelightHeight = 0.917; //Mid:8.5 Bottom:7 Top:9.25
+    public final double limelightHeight = 0.917; //Mid:8.5 Bottom:7 Top: 9.25
     public final double tapeHeight = 8.2917;// Bottom:13 Mid:14 Top:15
     public final double limelightScalar = 0.486011021619;
 
@@ -39,10 +39,19 @@ public class Limelight extends SubsystemBase{
         return ta.getDouble(0.0);
     }
 
+    /*
+    @param int state: ledMode state
+    0: use the LED Mode set in the current pipeline
+    1: force off
+    2: force blink
+    3: force on
+    */
+    public void setLED(int state){
+        table.getEntry("ledMode").setNumber(state);
+    }
+
     public double getLimelightDistance(){
-        
-        double y = gety();
-        double distanceFeet = ((tapeHeight - limelightHeight) / Math.tan(Math.toRadians(y+Math.toDegrees(Math.atan(1.39583/1)))));
+        double distanceFeet = ((tapeHeight - limelightHeight) / Math.tan(Math.toRadians(gety()+Math.toDegrees(Math.atan(1.39583/1)))));
         double fitFeet = distanceFeet * (limelightScalar * (distanceFeet + 3.073) - .05);
         double fitFeet2 = 0;
         if(fitFeet > 4 && fitFeet <= 10){//Piecewise for distances between 4 feet and 6 feet
