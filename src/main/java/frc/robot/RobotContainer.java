@@ -54,4 +54,18 @@ public class RobotContainer {
     // An ExampleCommand will run in autonomous
     return m_autoCommand;
   }
+
+        /** Deadband 5 percent, used on the gamepad */
+        double Deadband(double value) {
+          /* Upper deadband */
+          if (value >= +0.05) 
+            return value;
+          
+          /* Lower deadband */
+          if (value <= -0.05)
+            return value;
+          
+          /* Outside deadband */
+          return 0;
+         }
 }
