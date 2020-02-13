@@ -27,16 +27,15 @@ public class Drive extends SubsystemBase{
 
 	private DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(Units.inchesToMeters(Constants.trackWidth));
 	private DifferentialDriveWheelSpeeds wheelSpeeds;
-
 	private Pose2d currentOdometry;
-
-	// Update the pose
-	//DifferentialDriveOdometry m_odometry = new DifferentialDriveOdometry(getGyroHeading(), new Pose2d(5.0, 13.5, new Rotation2d());
-	// SensorCollection leftEncoder = new SensorCollection(talon1);
-	// SensorCollection rightEncoder = new SensorCollection(talon2);  
-	// = new ChassisSpeeds(0, 0, Math.PI);
-
 	private double oldDistance = 0; 
+
+	private boolean simpleDrive = true;
+
+	private double Drivemultiplier = 1;
+
+	private double sensitivityScaler = 100; 
+	// smaller the value, higher the sensitivity adjustment
 
     public Drive(){
 		configMotors();
@@ -55,10 +54,15 @@ public class Drive extends SubsystemBase{
 	}
 
 	private void configMotors(){
-		talon_left.configFactoryDefault();
-		talon_right.configFactoryDefault();
-		victor_left.configFactoryDefault();
-		victor_right.configFactoryDefault();
+		talon_left.configFactoryDefault(10);
+		talon_right.configFactoryDefault(10);
+		victor_left.configFactoryDefault(10);
+		victor_right.configFactoryDefault(10);
+
+		talon_left.clearStickyFaults(19);
+		talon_right.clearStickyFaults(10);
+		victor_left.clearStickyFaults(10);
+		victor_right.clearStickyFaults(10);
 
 		talon_left.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 10);
 		talon_right.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 10);
@@ -126,7 +130,7 @@ public class Drive extends SubsystemBase{
 	}
 
 	public double getAcceleration(axis AXIS){
-		double accel = 0;;
+		double accel = 0;
 		switch(AXIS){
 			case x:
 				accel = gyro.getAccelInstantX();
@@ -155,13 +159,12 @@ public class Drive extends SubsystemBase{
 		gyro.calibrate();
 	}
 
-	public void setWheelPow(double right, double left){
+	public void setWheelPow(double left, double right){
 		talon_left.set(ControlMode.PercentOutput, right);
 		talon_right.set(ControlMode.PercentOutput, left);
 	}
 
-	public void setWheelVelocity(ChassisSpeeds chassisSpeed) {
-		wheelSpeeds = kinematics.toWheelSpeeds(chassisSpeed);
+	public void setWheelVelocity(DifferentialDriveWheelSpeeds wheelSpeeds) {
 		double leftSetpoint = (wheelSpeeds.leftMetersPerSecond) * 4096 / (Units.inchesToMeters(Constants.wheelDiameter)* Math.PI);
 		double rightSetpoint = (wheelSpeeds.rightMetersPerSecond) * 4096 / (Units.inchesToMeters(Constants.wheelDiameter) * Math.PI);
 
@@ -170,8 +173,9 @@ public class Drive extends SubsystemBase{
 	}
 
 	public void updateOdometry(){
-		double leftDistance = talon_left.getSelectedSensorPosition(0);
-		double rightDistance = talon_right.getSelectedSensorPosition(0);
+		// Based off of Code Orange FRC 3476
+		double leftDistance = TicksToMeters(talon_left.getSelectedSensorPosition(0));
+		double rightDistance = TicksToMeters(talon_right.getSelectedSensorPosition(0));
 		double currentDistance = (leftDistance + rightDistance) / 2;
 
 		double deltaDistance = currentDistance - oldDistance;
@@ -195,7 +199,45 @@ public class Drive extends SubsystemBase{
 		return new Rotation2d(rotation.getCos(), -rotation.getSin());
 	}
 
-	
+	public void bangDrive(double mag, double turn, boolean quickTurn){
+		double radius = 1/turn * Math.copySign(24 ,turn); // change 24 to value appropriate for our robot
+		double deltaV = (Constants.trackWidth * Math.PI) * (mag * Drivemultiplier / radius);
+		double sensitivity = Math.pow(mag + 1, -1 / sensitivityScaler);
+		deltaV *= sensitivity;
+		if(quickTurn){
+				deltaV = turn;
+		}
+		double vel_left = mag + deltaV;
+		double vel_right = mag - deltaV;
+
+		if(vel_left > 1.0){
+			vel_right -= (vel_left-1.0);
+			vel_left = 1.0;
+		}
+		else if(vel_right > 1.0){
+			vel_left -= (vel_right-1.0);
+			vel_right = 1.0;		
+		} else if(vel_left < -1.0){
+			vel_right += (-vel_left -1.0);
+			vel_left = -1.0;
+		} else if(vel_right < -1.0){
+			vel_left += (-vel_right -1.0);
+			vel_right = -1.0;		
+		}
+		if(simpleDrive){
+			setWheelPow(vel_left, vel_right);
+		}
+		else{
+			setWheelVelocity(new DifferentialDriveWheelSpeeds(vel_left, vel_right));
+		}
+	}
+
+	public double getVoltage(){
+		return (talon_left.getMotorOutputVoltage() + talon_right.getMotorOutputVoltage() + victor_left.getMotorOutputVoltage()+ victor_right.getMotorOutputVoltage());
+	}
+
+
+
 
 	/*
     public void drive(double turn, double magnitude_turn, double power, boolean quickTurn){

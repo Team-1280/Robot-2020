@@ -14,8 +14,6 @@ public final class Constants {
     public static final int CANRightTalon = 1;
     public static final int CANLeftVictor = 2;
     public static final int CANRightVictor = 3;
-    public static final int CANShooterLeftTalon = 4;
-    public static final int CANShooterRightTalon = 5;
 
     // CAN bus timings
     public static final int CAN_Update_Rate = 5; // 5 miliseconds
@@ -29,6 +27,9 @@ public static final int PWMIntake1 = 0;
 public static final int PWMIntake2 = 0;
 public static final int PWMConveyorBelt = 0;
 public static final int PWMHopper = 0;
+
+public static final int joystick_left = 0;
+public static final int joystick_right = 1;
    
 //-----------------------------------------------------
 //Robot details & Coefficents
