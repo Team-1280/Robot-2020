@@ -30,7 +30,6 @@ public class RobotContainer {
 
   private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
 
-
   private Joystick joy_left = new Joystick(Constants.joystick_left);
   private Joystick joy_right = new Joystick(Constants.joystick_right);
 
@@ -54,7 +53,8 @@ public class RobotContainer {
   }
 
   public void TeleopDrive(){
-    drive.bangDrive(joy_left.getY(), getAngle(joy_right), joy_left.getZ()>0.5); // create buffer time so it will take time for it switch
+    drive.setWheelPow(joy_left.getY(), joy_right.getY());
+    //drive.bangDrive(joy_left.getY(), Math.sin(getAngle(joy_right)), joy_left.getZ()>0.5); // create buffer time so it will take time for it switch
   }
 
   public static double getAngle(Joystick joy){

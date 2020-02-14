@@ -48,9 +48,7 @@ public class Drive extends SubsystemBase{
 		talon_right.setNeutralMode(NeutralMode.Brake);
 
 		calibrateGyro();
-
-		// assumes starting point of 0-0. 
-		currentOdometry	= new Pose2d(new Translation2d(), getAngle());
+		zeroSensors();
 	}
 
 	private void configMotors(){
@@ -58,6 +56,15 @@ public class Drive extends SubsystemBase{
 		talon_right.configFactoryDefault(10);
 		victor_left.configFactoryDefault(10);
 		victor_right.configFactoryDefault(10);
+
+		talon_left.configVoltageCompSaturation(12);
+		talon_right.configVoltageCompSaturation(12);
+		victor_left.configVoltageCompSaturation(12);
+		victor_right.configVoltageCompSaturation(12);
+		talon_left.enableVoltageCompensation(true);
+		talon_right.enableVoltageCompensation(true);
+		victor_left.enableVoltageCompensation(true);
+		victor_right.enableVoltageCompensation(true);
 
 		talon_left.clearStickyFaults(19);
 		talon_right.clearStickyFaults(10);
@@ -69,12 +76,16 @@ public class Drive extends SubsystemBase{
 	
 		talon_right.setInverted(true);
 		victor_right.setInverted(true);
-		  
+
+		talon_left.setSensorPhase(Constants.leftSensorPhase);
+		talon_right.setSensorPhase(Constants.rightSensorPhase);
+
 		victor_left.follow(talon_left);
 		victor_right.follow(talon_right);	
 	}
 	
 	public void configAuto(){
+		zeroSensors();
 		talon_left.config_kP(0, Constants.kPLeftAuto, 10);
 		talon_left.config_kD(0, Constants.kDLeftAuto, 10);
 		talon_right.config_kF(0, Constants.kFLeftAuto, 10);
@@ -115,9 +126,18 @@ public class Drive extends SubsystemBase{
 		talon_right.config_kF(0, 0, 10);
 	}
 
+	// starting points (X,Y)
+	public void config(double X, double Y){
+		// assumes starting point of 0-0. 
+		currentOdometry	= new Pose2d(new Translation2d(X,Y), getAngle());
+	}
+
     @Override
     public void periodic() {
 		updateOdometry();
+
+		System.out.println("X: " + currentOdometry.getTranslation().getX());
+		System.out.println("Y: " + currentOdometry.getTranslation().getX());
 	}
 	
 	public Rotation2d getAngle(){
@@ -160,8 +180,8 @@ public class Drive extends SubsystemBase{
 	}
 
 	public void setWheelPow(double left, double right){
-		talon_left.set(ControlMode.PercentOutput, right);
-		talon_right.set(ControlMode.PercentOutput, left);
+		talon_right.set(ControlMode.PercentOutput, right);
+		talon_left.set(ControlMode.PercentOutput, left);
 	}
 
 	public void setWheelVelocity(DifferentialDriveWheelSpeeds wheelSpeeds) {
@@ -195,15 +215,11 @@ public class Drive extends SubsystemBase{
 		return wheelCircumference * ticks / 4096.0;
 	}
 
-	public Rotation2d getInverse(Rotation2d rotation){
-		return new Rotation2d(rotation.getCos(), -rotation.getSin());
-	}
-
 	public void bangDrive(double mag, double turn, boolean quickTurn){
 		double radius = 1/turn * Math.copySign(24 ,turn); // change 24 to value appropriate for our robot
 		double deltaV = (Constants.trackWidth * Math.PI) * (mag * Drivemultiplier / radius);
-		double sensitivity = Math.pow(mag + 1, -1 / sensitivityScaler);
-		deltaV *= sensitivity;
+		//double sensitivity = Math.pow(Math.abs(mag) + 1, -1 / sensitivityScaler);
+		//deltaV *= sensitivity;
 		if(quickTurn){
 				deltaV = turn;
 		}
@@ -216,28 +232,29 @@ public class Drive extends SubsystemBase{
 		}
 		else if(vel_right > 1.0){
 			vel_left -= (vel_right-1.0);
-			vel_right = 1.0;		
+			vel_right = 1.0;
 		} else if(vel_left < -1.0){
 			vel_right += (-vel_left -1.0);
 			vel_left = -1.0;
 		} else if(vel_right < -1.0){
 			vel_left += (-vel_right -1.0);
-			vel_right = -1.0;		
+			vel_right = -1.0;
 		}
-		if(simpleDrive){
-			setWheelPow(vel_left, vel_right);
-		}
-		else{
-			setWheelVelocity(new DifferentialDriveWheelSpeeds(vel_left, vel_right));
-		}
+		setWheelPow(vel_left, vel_right);
 	}
 
 	public double getVoltage(){
-		return (talon_left.getMotorOutputVoltage() + talon_right.getMotorOutputVoltage() + victor_left.getMotorOutputVoltage()+ victor_right.getMotorOutputVoltage());
+		return (talon_left.getMotorOutputVoltage() + talon_right.getMotorOutputVoltage() + victor_left.getMotorOutputVoltage()+ victor_right.getMotorOutputVoltage())/4.0;
 	}
 
+	public Rotation2d getInverse(Rotation2d rotation){
+		return new Rotation2d(rotation.getCos(), -rotation.getSin());
+	}
 
-
+	public void zeroSensors(){
+		talon_left.setSelectedSensorPosition(0);
+		talon_right.setSelectedSensorPosition(0);
+	}
 
 	/*
     public void drive(double turn, double magnitude_turn, double power, boolean quickTurn){
@@ -252,6 +269,4 @@ public class Drive extends SubsystemBase{
       }
 	}
 	*/
-
-
 }

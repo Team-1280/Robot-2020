@@ -9,27 +9,32 @@ public final class Constants {
     /* CAN Bus ID's
     ID# 0-3: Drive Base
     ID# 4-5: Shooter 
-   */ 
+   */
+
     public static final int CANLeftTalon = 0;
-    public static final int CANRightTalon = 1;
-    public static final int CANLeftVictor = 2;
-    public static final int CANRightVictor = 3;
+    public static final int CANRightTalon = 3;
+    public static final int CANLeftVictor = 1;
+    public static final int CANRightVictor = 2;
 
     // CAN bus timings
     public static final int CAN_Update_Rate = 5; // 5 miliseconds
     public static final int kTimeoutMs = 10;
 
+    // 'direction' of sensors
+    public static final boolean leftSensorPhase = true;
+    public static final boolean rightSensorPhase = false;
+
        
 //-----------------------------------------------------
 //Robot Ports
 //------------------------------------------------------
-public static final int PWMIntake1 = 0;
-public static final int PWMIntake2 = 0;
-public static final int PWMConveyorBelt = 0;
-public static final int PWMHopper = 0;
+    public static final int PWMIntake1 = 0;
+    public static final int PWMIntake2 = 0;
+    public static final int PWMConveyorBelt = 0;
+    public static final int PWMHopper = 0;
 
-public static final int joystick_left = 0;
-public static final int joystick_right = 1;
+    public static final int joystick_left = 0;
+    public static final int joystick_right = 1;
    
 //-----------------------------------------------------
 //Robot details & Coefficents
