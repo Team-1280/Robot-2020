@@ -72,8 +72,15 @@ public final class Constants {
      public static final double kRamseteB = 0;
      public static final double kRamseteZeta = 0;
 
-     // 
+     // Feedforward constants
      public static final double driveTrainKV = 0;
      public static final double driveTrainKA = 0;
      public static final double driveTrainKS = 0;
+
+     // Shooter Constants
+     public static final double ShooterGearing = 0; // 10?
+     public static final double MotorConstant_775 = 1561; 
+     public static final boolean boolLeftSensorPhase = false;
+     public static final boolean boolRightSensorPhase = false;
+
 }
