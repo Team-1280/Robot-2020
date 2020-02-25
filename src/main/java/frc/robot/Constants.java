@@ -67,4 +67,13 @@ public final class Constants {
      public static final double kPRightShooter = 0;
      public static final double kDRightShooter = 0;
      public static final double kFRightShooter = 0;
+
+     // Ramsete Controller constants
+     public static final double kRamseteB = 0;
+     public static final double kRamseteZeta = 0;
+
+     // 
+     public static final double driveTrainKV = 0;
+     public static final double driveTrainKA = 0;
+     public static final double driveTrainKS = 0;
 }

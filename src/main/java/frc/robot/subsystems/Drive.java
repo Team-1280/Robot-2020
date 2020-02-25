@@ -1,20 +1,32 @@
 package frc.robot.subsystems;
 
+import java.io.IOException;
+import java.nio.file.Path;
+
 import com.analog.adis16448.frc.ADIS16448_IMU;
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.controller.RamseteController;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.geometry.Transform2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
 import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveKinematics;
+import edu.wpi.first.wpilibj.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
+import edu.wpi.first.wpilibj.trajectory.Trajectory;
+import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
+import edu.wpi.first.wpilibj.trajectory.Trajectory.State;
 import edu.wpi.first.wpilibj.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.util.DriveSpeeds;
 import frc.robot.util.LazyTalonSRX;
 import frc.robot.util.LazyVictorSPX;
 
@@ -26,11 +38,8 @@ public class Drive extends SubsystemBase{
 	private ADIS16448_IMU gyro = new ADIS16448_IMU();
 
 	private DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(Units.inchesToMeters(Constants.trackWidth));
-	private DifferentialDriveWheelSpeeds wheelSpeeds;
-	private Pose2d currentOdometry;
-	private double oldDistance = 0; 
-
-	private boolean simpleDrive = true;
+	private DifferentialDriveOdometry currentOdometry;
+	RamseteController controller;
 
 	private double Drivemultiplier = 1;
 
@@ -84,7 +93,17 @@ public class Drive extends SubsystemBase{
 		victor_right.follow(talon_right);	
 	}
 	
-	public void configAuto(){
+	public void configAuto(String autoPath){
+		/*
+		try {
+			Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(autoPath);
+			trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+		  } catch (IOException ex) {
+			DriverStation.reportError("Unable to open trajectory: " + autoPath, ex.getStackTrace());
+		  }
+
+		currentOdometry = new DifferentialDriveOdometry(getAngle(), trajectory.getInitialPose());
+		*/
 		zeroSensors();
 		talon_left.config_kP(0, Constants.kPLeftAuto, 10);
 		talon_left.config_kD(0, Constants.kDLeftAuto, 10);
@@ -126,18 +145,8 @@ public class Drive extends SubsystemBase{
 		talon_right.config_kF(0, 0, 10);
 	}
 
-	// starting points (X,Y)
-	public void config(double X, double Y){
-		// assumes starting point of 0-0. 
-		currentOdometry	= new Pose2d(new Translation2d(X,Y), getAngle());
-	}
-
     @Override
     public void periodic() {
-		updateOdometry();
-
-		System.out.println("X: " + currentOdometry.getTranslation().getX());
-		System.out.println("Y: " + currentOdometry.getTranslation().getX());
 	}
 	
 	public Rotation2d getAngle(){
@@ -184,29 +193,22 @@ public class Drive extends SubsystemBase{
 		talon_left.set(ControlMode.PercentOutput, left);
 	}
 
-	public void setWheelVelocity(DifferentialDriveWheelSpeeds wheelSpeeds) {
-		double leftSetpoint = (wheelSpeeds.leftMetersPerSecond) * 4096 / (Units.inchesToMeters(Constants.wheelDiameter)* Math.PI);
-		double rightSetpoint = (wheelSpeeds.rightMetersPerSecond) * 4096 / (Units.inchesToMeters(Constants.wheelDiameter) * Math.PI);
+	public void setWheelVelocity(DriveSpeeds speeds) {
+		double leftSetpoint = (speeds.wheelSpeeds.leftMetersPerSecond) * 4096 / (Units.inchesToMeters(Constants.wheelDiameter)* Math.PI);
+		double rightSetpoint = (speeds.wheelSpeeds.rightMetersPerSecond) * 4096 / (Units.inchesToMeters(Constants.wheelDiameter) * Math.PI);
+		double feedForwardLeft = Constants.driveTrainKV * leftSetpoint + Constants.driveTrainKA * speeds.accelLeft + Constants.driveTrainKS;
+		double feedForwardRight = Constants.driveTrainKV * leftSetpoint + Constants.driveTrainKA * speeds.accelLeft + Constants.driveTrainKS;
 
-		talon_left.set(ControlMode.Velocity, leftSetpoint);
-		talon_right.set(ControlMode.Velocity, rightSetpoint);
+		talon_left.set(ControlMode.Velocity, leftSetpoint, DemandType.ArbitraryFeedForward, feedForwardLeft);
+		talon_right.set(ControlMode.Velocity, rightSetpoint, DemandType.ArbitraryFeedForward, feedForwardRight);
 	}
 
 	public void updateOdometry(){
 		// Based off of Code Orange FRC 3476
 		double leftDistance = TicksToMeters(talon_left.getSelectedSensorPosition(0));
 		double rightDistance = TicksToMeters(talon_right.getSelectedSensorPosition(0));
-		double currentDistance = (leftDistance + rightDistance) / 2;
 
-		double deltaDistance = currentDistance - oldDistance;
-		Translation2d deltaPosition = new Translation2d(deltaDistance, 0);
-		Rotation2d deltaRotation = getInverse(getAngle());
-		Rotation2d halfRotation = new Rotation2d(deltaRotation.getRadians()/2);
-
-		Transform2d transform = new Transform2d(deltaPosition.rotateBy(halfRotation),deltaRotation);
-		currentOdometry = currentOdometry.transformBy(transform);
-
-		oldDistance = currentDistance;
+		currentOdometry.update(getAngle(), leftDistance, rightDistance);
 	}
 
 	public double TicksToMeters(double ticks){
@@ -215,14 +217,15 @@ public class Drive extends SubsystemBase{
 		return wheelCircumference * ticks / 4096.0;
 	}
 
-	public void bangDrive(double mag, double turn, boolean quickTurn){
-		double radius = 1/turn * Math.copySign(24 ,turn); // change 24 to value appropriate for our robot
-		double deltaV = (Constants.trackWidth * Math.PI) * (mag * Drivemultiplier / radius);
+	public void bangDrive(double mag, double turn, double z){
+
+		double radius = 1/Math.sin(turn); // change 24 to value appropriate for our robot
+		//double deltaV = (Constants.trackWidth * Math.PI) * (mag * Drivemultiplier / radius);
 		//double sensitivity = Math.pow(Math.abs(mag) + 1, -1 / sensitivityScaler);
 		//deltaV *= sensitivity;
-		if(quickTurn){
-				deltaV = turn;
-		}
+
+		double deltaV = Drivemultiplier*(Math.sin(turn)); // (Ziggy Tuner)
+
 		double vel_left = mag + deltaV;
 		double vel_right = mag - deltaV;
 
@@ -247,6 +250,14 @@ public class Drive extends SubsystemBase{
 		return (talon_left.getMotorOutputVoltage() + talon_right.getMotorOutputVoltage() + victor_left.getMotorOutputVoltage()+ victor_right.getMotorOutputVoltage())/4.0;
 	}
 
+	public Pose2d getOdometry(){
+		return currentOdometry.getPoseMeters();
+	}
+
+	public DifferentialDriveKinematics getKinematics(){
+		return kinematics;
+	}
+
 	public Rotation2d getInverse(Rotation2d rotation){
 		return new Rotation2d(rotation.getCos(), -rotation.getSin());
 	}
@@ -255,18 +266,4 @@ public class Drive extends SubsystemBase{
 		talon_left.setSelectedSensorPosition(0);
 		talon_right.setSelectedSensorPosition(0);
 	}
-
-	/*
-    public void drive(double turn, double magnitude_turn, double power, boolean quickTurn){
-      double steeringAssist = kP*(Math.sin(turn)) *Math.pow(magnitude_turn+0.7,2); // sensitivity scaling. 0.7 = kz (Ziggy Tuner)
-      if(!quickTurn){
-		talon_left.set(ControlMode.PercentOutput, power - steeringAssist);
-		talon_right.set(ControlMode.PercentOutput, power + steeringAssist);
-      }
-      else{
-        talon_left.set(ControlMode.PercentOutput, -3 * steeringAssist);
-        talon_right.set(ControlMode.PercentOutput,  3 * steeringAssist);
-      }
-	}
-	*/
 }
