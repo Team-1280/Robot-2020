@@ -7,72 +7,43 @@
 
 package frc.robot.commands.autoCommands;
 
-import frc.robot.subsystems.Drive;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.ArrayList;
-
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Filesystem;
+import frc.robot.subsystems.Shooter;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
-import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
 /**
  * An example command that uses an example subsystem.
  */
-public class Auto1 extends CommandBase {
+public class Auto3Ball extends CommandBase {
   @SuppressWarnings({"PMD.UnusedPrivateField", "PMD.SingularField"})
 
-  private Drive drive;
-  private ArrayList<Trajectory> trajectoryList = new ArrayList<Trajectory>(1);
-  private int trajectoryIndex = 0;
-  private boolean isDone = false;
-
-  private final String trajectoryJSON1 = "paths/YourPath.wpilib.json";
-  
-
+  private Shooter shooter;
   /**
    * Creates a new ExampleCommand.
    *
    * @param subsystem The subsystem used by this command.
    */
-
-  public Auto1(Drive m_drive) {
-    drive = m_drive;
-    addRequirements(drive);
+  public Auto3Ball(Shooter shoot) {
+    shooter = shoot;
+    addRequirements(shoot);
   }
 
+  // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    try {
-      Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON1);
-      Trajectory trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
-      trajectoryList.set(0, trajectory);
-    } catch (IOException ex) {
-      DriverStation.reportError("Unable to open trajectory: " + trajectoryJSON1, ex.getStackTrace());
-      trajectoryList.set(0,null);
-    }
+    // IS limelight Connected? 
+        // Yes? 
+    // check position of trarget. Is target in view? -> if not, servo until it is.
+
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    if(!drive.isTrajectoryDone()){
-    drive.updateAuto();
-    }
-    else{
-      isDone = true;
-    }
-    /*
-    else{
-      //trajectoryIndex ++;
-      //drive.setTrajectory(trajectoryList.get(trajectoryIndex))
-    }
-    */
+    // update odometry
     // update trajectory until @ end of path
       // @ certain points along path, call other commands
+    // set new path or end
   }
 
   // Called once the command ends or is interrupted.
@@ -84,6 +55,12 @@ public class Auto1 extends CommandBase {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return isDone;
+    return false;
   }
+
+  private boolean isPathComplete(){
+    // if final position ~ 
+    return false;
+  }
+
 }

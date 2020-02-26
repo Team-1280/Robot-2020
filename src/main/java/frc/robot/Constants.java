@@ -83,4 +83,7 @@ public final class Constants {
      public static final boolean boolLeftSensorPhase = false;
      public static final boolean boolRightSensorPhase = false;
 
+     // 
+     public static final double PathTolerance = 0.05;
+
 }

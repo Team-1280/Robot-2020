@@ -7,9 +7,12 @@
 
 package frc.robot;
 
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import frc.robot.commands.ExampleCommand;
 
 import frc.robot.subsystems.*;
@@ -26,6 +29,10 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
   private final Drive drive = new Drive();
+  private final Shooter shoot = new Shooter();
+
+  private ShuffleboardTab window = Shuffleboard.getTab("Drive");
+  private NetworkTableEntry example = window.add("Example Entry", 0).getEntry();
 
 
   private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);

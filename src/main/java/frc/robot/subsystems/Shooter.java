@@ -30,12 +30,7 @@ import frc.robot.util.LazyVictorSPX;
 public class Shooter extends SubsystemBase{
     private LazyTalonSRX talon_left = new LazyTalonSRX(Constants.CANLeftTalon);
     private LazyTalonSRX talon_right = new LazyTalonSRX(Constants.CANRightTalon);
-
-
-	private double Drivemultiplier = 1;
-
-	private double sensitivityScaler = 100; 
-	// smaller the value, higher the sensitivity adjustment
+	private double RPM = 0;
 
     public Shooter(){
 		configMotors();
@@ -75,10 +70,8 @@ public class Shooter extends SubsystemBase{
 	public void configTeleop(){
 		talon_left.config_kP(0, Constants.kPRightTeleop, 10);
 		talon_left.config_kD(0, Constants.kDRightTeleop, 10);
-		talon_left.config_kF(0, Constants.kFRightTeleop, 10);
 		talon_right.config_kP(0, Constants.kPLeftTeleop, 10);
 		talon_right.config_kD(0, Constants.kDRightTeleop, 10);
-		talon_right.config_kF(0, Constants.kFLeftTeleop, 10);
 		talon_left.configClosedloopRamp(12d / 200d, 10);
 		talon_right.configClosedloopRamp(12d / 200d, 10);
     }
@@ -97,21 +90,28 @@ public class Shooter extends SubsystemBase{
 
 	}
 
-	public void setWheelVelocity(double RPM) {
-        double velocity = RPM / 60.0 * 4096; 
-		double leftSetpoint = (velocity);
-		double rightSetpoint = (velocity);
-		double feedForward = velocity / (Constants.ShooterGearing / Constants.MotorConstant_775 ) + Constants.driveTrainKS;
+	public synchronized void setRPM(double speed){
+		RPM = speed;
+	}
 
-		talon_left.set(ControlMode.Velocity, leftSetpoint, DemandType.ArbitraryFeedForward, feedForward);
-		talon_right.set(ControlMode.Velocity, rightSetpoint, DemandType.ArbitraryFeedForward, feedForward);
+	public void updateWheelVelocity() {
+        double velocity = RPM / 60.0 * 4096; 
+		double feedForward = velocity / (Constants.ShooterGearing / Constants.MotorConstant_775 );
+		talon_left.set(ControlMode.Velocity, velocity, DemandType.ArbitraryFeedForward, feedForward);
+		talon_right.set(ControlMode.Velocity, velocity, DemandType.ArbitraryFeedForward, feedForward);
+	}
+
+	public double getLeftVelocity(){
+		return talon_left.getSensorCollection().getQuadratureVelocity();
+	}
+
+	public double getRightVelocity(){
+		return talon_right.getSensorCollection().getQuadratureVelocity();
 	}
 
 	public double getVoltage(){
 		return (talon_left.getMotorOutputVoltage() + talon_right.getMotorOutputVoltage())/2.0;
 	}
-
-
 
 	public void zeroSensors(){
 		talon_left.setSelectedSensorPosition(0);
