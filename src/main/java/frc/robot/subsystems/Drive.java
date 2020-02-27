@@ -1,35 +1,20 @@
 package frc.robot.subsystems;
-import java.util.function.BiConsumer;
-import java.io.IOException;
-import java.nio.file.Path;
 import com.analog.adis16448.frc.ADIS16448_IMU;
-import com.analog.adis16448.frc.ADIS16448_IMU.IMUAxis;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.wpilibj.controller.RamseteController;
-import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.controller.RamseteController;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.geometry.Transform2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
-import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
-import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
 import edu.wpi.first.wpilibj.trajectory.Trajectory.State;
 import edu.wpi.first.wpilibj.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.util.DriveSpeeds;
 import frc.robot.util.LazyTalonSRX;
 import frc.robot.util.LazyVictorSPX;
 public class Drive extends SubsystemBase{
@@ -46,32 +31,6 @@ public class Drive extends SubsystemBase{
 	private boolean isTrajectoryFinished = false;
 
     private DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(Units.inchesToMeters(Constants.trackWidth));
-
-
-    private double oldDistance = 0; 
-    private boolean simpleDrive = true;
-    private double Drivemultiplier = 1;
-	private double sensitivityScaler = 100; 
-
-    // smaller the value, higher the sensitivity adjustment
-    private ShuffleboardTab debugWindow = Shuffleboard.getTab("Drive");
-    private NetworkTableEntry kP1 = debugWindow.add("kP1", 0).getEntry();
-    private NetworkTableEntry kD1 = 
-    debugWindow.add("kD1", 0)
-        .getEntry();
-    private NetworkTableEntry kF1 =
-    debugWindow.add("kF1", 0)
-        .getEntry();
-    private NetworkTableEntry kP2 = debugWindow.add("kP2", 0).getEntry();
-    private NetworkTableEntry kD2 = debugWindow.add("kD2", 0).getEntry();
-    private NetworkTableEntry kF2 = debugWindow.add("kF2", 0).getEntry();
-    private NetworkTableEntry velocity = debugWindow.add("Velocity", 0).getEntry();
-    private NetworkTableEntry velocityLeftError = debugWindow.add("Left Error", 0).getEntry();
-    private NetworkTableEntry velocityRightError = debugWindow.add("Right Error", 0).getEntry();
-    
-    private NetworkTableEntry velocity_left = debugWindow.add("velocity right", 0).withWidget("Velocity Left").getEntry();
-    private NetworkTableEntry velocity_right = debugWindow.add("velocity left", 0).withWidget("Velocity Right").getEntry();
-    private NetworkTableEntry gyro_error = debugWindow.add("gyro Error", 0).withWidget("gyro error").getEntry();
 
 	public Drive(){
         configMotors();
@@ -111,8 +70,10 @@ public class Drive extends SubsystemBase{
         
         talon_left.setSelectedSensorPosition(0);
 		talon_right.setSelectedSensorPosition(0);
-		
-		talon_left.config_kP(0, Constants.kPRightTeleop, 10);
+    }
+
+    public void setGains(){
+        talon_left.config_kP(0, Constants.kPRightTeleop, 10);
         talon_left.config_kD(0, Constants.kDRightTeleop, 10);
         talon_left.config_kF(0, Constants.kFRightTeleop, 10);
         talon_right.config_kP(0, Constants.kPLeftTeleop, 10);
@@ -122,26 +83,14 @@ public class Drive extends SubsystemBase{
         talon_right.configClosedloopRamp(12d / 200d, 10);
     }
     
-    public void configCalibrate(){
-        // get k's from Network Tables
-        double vel = velocity.getDouble(0);
-        velocity_right.setDouble(talon_right.getSensorCollection().getQuadratureVelocity());
-        velocity_left.setDouble(talon_left.getSensorCollection().getQuadratureVelocity());
-        double errorleft = Math.abs((vel) * 4096 / (Units.feetToMeters(Constants.wheelDiameter)* Math.PI)) - Math.abs(talon_left.getSensorCollection().getQuadratureVelocity());
-        double errorright = Math.abs(vel* 4096 / (Units.feetToMeters(Constants.wheelDiameter)* Math.PI)) - Math.abs(talon_right.getSensorCollection().getQuadratureVelocity());
-        velocityLeftError.setDouble(errorleft);
-        velocityRightError.setDouble(errorright);
-        talon_left.config_kP(0, kP1.getDouble(0), 10);
-        talon_left.config_kD(0, kD1.getDouble(0), 10);
-        talon_left.config_kF(0, kF1.getDouble(0), 10);
-        talon_right.config_kP(0, kP2.getDouble(0), 10);
-        talon_right.config_kD(0, kD2.getDouble(0), 10);
-        talon_right.config_kF(0, kF2.getDouble(0), 10);
+    public void calibratePeriodic(double kP1, double kD1, double kP2, double kD2, double vel){
+        talon_left.config_kP(0, kP1, 10);
+        talon_left.config_kD(0, kD1, 10);
+        talon_right.config_kP(0, kP2, 10);
+        talon_right.config_kD(0, kD2, 10);
         talon_left.configClosedloopRamp(12d / 200d, 10);
         talon_right.configClosedloopRamp(12d / 200d, 10);
-        setWheelVelocity(new DriveSpeeds(new DifferentialDriveWheelSpeeds(vel, vel), 0, 0));
-        
-        gyro_error.setDouble(gyro.getAngle());
+        setWheelVelocity(new DifferentialDriveWheelSpeeds(vel, vel));
 	}
 	
 	@Override
@@ -154,19 +103,15 @@ public class Drive extends SubsystemBase{
 	}
 	
     public void setWheelPow(double left, double right){
-        talon_right.set(ControlMode.PercentOutput, right);
-        talon_left.set(ControlMode.PercentOutput, left);
+        talon_right.set(ControlMode.PercentOutput, right, DemandType.ArbitraryFeedForward, Constants.driveTrainKSLeft / 12.0);
+        talon_left.set(ControlMode.PercentOutput, left, DemandType.ArbitraryFeedForward, Constants.driveTrainKSRight / 12.0);
     }
 
-    public void setWheelVelocity(DriveSpeeds speeds) {
-        double leftSpeed = speeds.wheelSpeeds.leftMetersPerSecond;
-        double rightSpeed = speeds.wheelSpeeds.rightMetersPerSecond;
-        double leftSetpoint = metersToEncoderTicks(leftSpeed);
-        double rightSetpoint = metersToEncoderTicks(rightSpeed);
-        double feedForwardLeft = Constants.driveTrainKV * leftSpeed + Constants.driveTrainKA * speeds.accelLeft + Constants.driveTrainKS;
-        double feedForwardRight = Constants.driveTrainKV * rightSpeed + Constants.driveTrainKA * speeds.accelRight + Constants.driveTrainKS;
-        talon_left.set(ControlMode.Velocity, leftSetpoint, DemandType.ArbitraryFeedForward, feedForwardLeft/12.0);
-        talon_right.set(ControlMode.Velocity, rightSetpoint, DemandType.ArbitraryFeedForward, feedForwardRight/12.0);
+    public void setWheelVelocity(DifferentialDriveWheelSpeeds  speeds) {
+        double leftSpeed = speeds.leftMetersPerSecond;
+        double rightSpeed = speeds.rightMetersPerSecond;
+        talon_left.set(ControlMode.Velocity, leftSpeed, DemandType.ArbitraryFeedForward, (Constants.driveTrainKSLeft) / 12);
+        talon_right.set(ControlMode.Velocity, rightSpeed, DemandType.ArbitraryFeedForward, (Constants.driveTrainKSRight) / 12.0);
 	}
 	
     public void updateOdometry(){
@@ -199,9 +144,8 @@ public class Drive extends SubsystemBase{
 				else{
 					isTrajectoryFinished = true;
 				}
-			}
-			DriveSpeeds speeds = new DriveSpeeds (kinematics.toWheelSpeeds(ramseteController.calculate(getOdometry(), desiredState)), 0, 0);
-			setWheelVelocity(speeds);
+            }
+			setWheelVelocity(kinematics.toWheelSpeeds(ramseteController.calculate(getOdometry(), desiredState)));
 		}
 	}
 
@@ -226,29 +170,8 @@ public class Drive extends SubsystemBase{
 		return meters * 4096 / wheelCircumference;
 	}
 	
-    public void bangDrive(double mag, double turn, double z){
-        double radius = 1/Math.sin(turn); // change 24 to value appropriate for our robot
-        //double deltaV = (Constants.trackWidth * Math.PI) * (mag * Drivemultiplier / radius);
-        //double sensitivity = Math.pow(Math.abs(mag) + 1, -1 / sensitivityScaler);
-        //deltaV *= sensitivity;
-        double deltaV = Drivemultiplier*(Math.sin(turn)); // (Ziggy Tuner)
-        double vel_left = mag + deltaV;
-        double vel_right = mag - deltaV;
-        if(vel_left > 1.0){
-            vel_right -= (vel_left-1.0);
-            vel_left = 1.0;
-        }
-        else if(vel_right > 1.0){
-            vel_left -= (vel_right-1.0);
-            vel_right = 1.0;
-        } else if(vel_left < -1.0){
-            vel_right += (-vel_left -1.0);
-            vel_left = -1.0;
-        } else if(vel_right < -1.0){
-            vel_left += (-vel_right -1.0);
-            vel_right = -1.0;
-        }
-        setWheelPow(vel_left, vel_right);
+    public void teleopDrive(double mag, double turn, double z){
+        
 	}
 	
     public double getVoltage(){
@@ -266,7 +189,14 @@ public class Drive extends SubsystemBase{
 	public Rotation2d getAngle(){
         return new Rotation2d(Math.toRadians(gyro.getGyroAngleX()));
 	}
-	
+    
+    public double getSpeedLeft(){
+        return TicksToMeters(talon_left.getSelectedSensorVelocity());
+    }
+
+    public double getSpeedRight(){
+        return TicksToMeters(talon_right.getSelectedSensorVelocity());
+    }
     public enum axis{
         x,y,z
 	}

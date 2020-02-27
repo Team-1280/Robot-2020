@@ -10,12 +10,15 @@ package frc.robot;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PowerDistributionPanel;
+import edu.wpi.first.wpilibj.SolenoidBase;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import frc.robot.commands.ExampleCommand;
+import frc.robot.commands.autoCommands.*;
 
 import frc.robot.subsystems.*;
+import frc.robot.util.Mathz;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -26,20 +29,34 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  * (including subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
+  // Global Stuff 
+  private PowerDistributionPanel PDP = new PowerDistributionPanel();
+
   // The robot's subsystems and commands are defined here...
-  private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
   private final Drive drive = new Drive();
   private final Shooter shoot = new Shooter();
+  private final Intake intake = new Intake(PDP);
 
   private ShuffleboardTab window = Shuffleboard.getTab("Drive");
   private NetworkTableEntry example = window.add("Example Entry", 0).getEntry();
 
+     // smaller the value, higher the sensitivity adjustment
+     private ShuffleboardTab debugWindow = Shuffleboard.getTab("Drive");
+     private NetworkTableEntry kP1 = debugWindow.add("kP1", 0).getEntry();
+     private NetworkTableEntry kD1 = debugWindow.add("kD1", 0).getEntry();
+     private NetworkTableEntry kP2 = debugWindow.add("kP2", 0).getEntry();
+     private NetworkTableEntry kD2 = debugWindow.add("kD2", 0).getEntry();
+     private NetworkTableEntry velocity = debugWindow.add("Velocity", 0).getEntry();
+     private NetworkTableEntry velocityLeftError = debugWindow.add("Left Error", 0).getEntry();
+     private NetworkTableEntry velocityRightError = debugWindow.add("Right Error", 0).getEntry();
+     private NetworkTableEntry velocity_left = debugWindow.add("velocity right", 0).withWidget("Velocity Left").getEntry();
+     private NetworkTableEntry velocity_right = debugWindow.add("velocity left", 0).withWidget("Velocity Right").getEntry();
 
-  private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
 
   private Joystick joy_left = new Joystick(Constants.joystick_left);
   private Joystick joy_right = new Joystick(Constants.joystick_right);
 
+  private Auto1 auto = new Auto1(drive);
 
   /**
    * The container for the robot.  Contains subsystems, OI devices, and commands.
@@ -47,14 +64,11 @@ public class RobotContainer {
   public RobotContainer() {
     // Configure the button bindings
     configureButtonBindings();
+    PDP.clearStickyFaults();
+    SolenoidBase.clearAllPCMStickyFaults(0);
   }
 
-  /**
-   * Use this method to define your button->command mappings.  Buttons can be created by
-   * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a
-   * {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
-   */
+
   private void configureButtonBindings() {
     
   }
@@ -64,8 +78,16 @@ public class RobotContainer {
     //drive.bangDrive(joy_left.getY(), Math.sin(getAngle(joy_right)), joy_left.getZ()>0.5); // create buffer time so it will take time for it switch
   }
 
-  public static double getAngle(Joystick joy){
-    return Math.atan(joy.getY()/joy.getX());
+  public void calibrateTester(){
+    double vel = velocity.getDouble(0);
+    double vel_right = drive.getSpeedRight();
+    double vel_left = drive.getSpeedLeft();
+    velocity_right.setDouble(vel_right);
+    velocity_left.setDouble(vel_left);
+    velocityLeftError.setDouble(Mathz.AbsoluteError(vel, vel_right));
+    velocityRightError.setDouble(Mathz.AbsoluteError(vel, vel_left));
+
+    drive.calibratePeriodic(kP1.getDouble(0), kD1.getDouble(0), kP2.getDouble(0), kD2.getDouble(0), vel);
   }
 
   /**
@@ -74,21 +96,16 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // An ExampleCommand will run in autonomous
-    return m_autoCommand;
+    // get it from network tables
+    return auto;
   }
 
-        /** Deadband 5 percent, used on the gamepad */
-        double Deadband(double value) {
-          /* Upper deadband */
-          if (value >= +0.05) 
-            return value;
-          
-          /* Lower deadband */
-          if (value <= -0.05)
-            return value;
-          
-          /* Outside deadband */
-          return 0;
-         }
+  public double getSystemVoltage(){
+    return PDP.getVoltage();
+  }
+
+  public double getTotalCurrent(){
+      return PDP.getTotalCurrent();
+  }
+
 }

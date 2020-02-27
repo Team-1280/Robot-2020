@@ -23,7 +23,6 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
  * An example command that uses an example subsystem.
  */
 public class Auto1 extends CommandBase {
-  @SuppressWarnings({"PMD.UnusedPrivateField", "PMD.SingularField"})
 
   private Drive drive;
   private ArrayList<Trajectory> trajectoryList = new ArrayList<Trajectory>(1);
