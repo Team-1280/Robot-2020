@@ -1,6 +1,7 @@
 package frc.robot.util;
 
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.geometry.Pose2d;
 
 public class Mathz {
     public static double getAngle(Joystick joy){
@@ -29,5 +30,11 @@ public class Mathz {
 
     public static double VoltageCompensation(double percentOutput, double SystemVoltage, double max){
         return percentOutput * max / SystemVoltage;
+    }
+
+    public static double getDistance(Pose2d p1, Pose2d p2){
+        double deltaX2 = Math.pow(p1.getTranslation().getX() - p2.getTranslation().getX(),2);
+        double deltaY2 = Math.pow(p1.getTranslation().getY() - p2.getTranslation().getY(),2);
+        return Math.sqrt(deltaX2 + deltaY2);
     }
 }

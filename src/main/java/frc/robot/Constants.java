@@ -74,7 +74,6 @@ public final class Constants {
      public static final double kDRightShooter = 0;
      public static final double kFShooters = Mathz.RPMtoTPS((Constants.ShooterGearing / Constants.MotorConstant_775)) * 1023.0 / 12.0; // calculated ideal feedfoward gain (full output is @ 1023)
 
-
      // Ramsete Controller constants
      public static final double kRamseteB = 2.0;
      public static final double kRamseteZeta = 0.7;

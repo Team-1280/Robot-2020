@@ -1,4 +1,5 @@
 package frc.robot.subsystems;
+
 import com.analog.adis16448.frc.ADIS16448_IMU;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.DemandType;
@@ -17,6 +18,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.util.LazyTalonSRX;
 import frc.robot.util.LazyVictorSPX;
+import frc.robot.util.Mathz;
+
 public class Drive extends SubsystemBase{
     private LazyTalonSRX talon_left = new LazyTalonSRX(Constants.CANLeftTalon);
     private LazyTalonSRX talon_right = new LazyTalonSRX(Constants.CANRightTalon);
@@ -27,7 +30,9 @@ public class Drive extends SubsystemBase{
 	private DifferentialDriveOdometry odometry = new DifferentialDriveOdometry(getAngle());
 	private RamseteController ramseteController = new RamseteController(Constants.kRamseteB, Constants.kRamseteZeta);
 	private Trajectory currentTrajectory;
-	private int trajectoryIndex = 0;
+    private int trajectoryIndex = 0;
+    private double pathLength = 0;
+    private double pathDistTraveled = 0;
 	private boolean isTrajectoryFinished = false;
 
     private DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(Units.inchesToMeters(Constants.trackWidth));
@@ -103,23 +108,23 @@ public class Drive extends SubsystemBase{
 	}
 	
     public void setWheelPow(double left, double right){
-        talon_right.set(ControlMode.PercentOutput, right, DemandType.ArbitraryFeedForward, Constants.driveTrainKSLeft / 12.0);
-        talon_left.set(ControlMode.PercentOutput, left, DemandType.ArbitraryFeedForward, Constants.driveTrainKSRight / 12.0);
+        talon_right.set(ControlMode.PercentOutput, right, DemandType.ArbitraryFeedForward, Math.copySign(Constants.driveTrainKSLeft / 12.0, right));
+        talon_left.set(ControlMode.PercentOutput, left, DemandType.ArbitraryFeedForward, Math.copySign(Constants.driveTrainKSRight / 12.0, left));
     }
 
     public void setWheelVelocity(DifferentialDriveWheelSpeeds  speeds) {
         double leftSpeed = speeds.leftMetersPerSecond;
         double rightSpeed = speeds.rightMetersPerSecond;
-        talon_left.set(ControlMode.Velocity, leftSpeed, DemandType.ArbitraryFeedForward, (Constants.driveTrainKSLeft) / 12);
-        talon_right.set(ControlMode.Velocity, rightSpeed, DemandType.ArbitraryFeedForward, (Constants.driveTrainKSRight) / 12.0);
+        talon_left.set(ControlMode.Velocity, leftSpeed, DemandType.ArbitraryFeedForward, Math.copySign(Constants.driveTrainKSLeft / 12.0, leftSpeed));
+        talon_right.set(ControlMode.Velocity, rightSpeed, DemandType.ArbitraryFeedForward, Math.copySign((Constants.driveTrainKSRight) / 12.0, rightSpeed));
 	}
 	
     public void updateOdometry(){
         double leftDistance = TicksToMeters(talon_left.getSelectedSensorPosition(0));
         double rightDistance = TicksToMeters(talon_right.getSelectedSensorPosition(0));
         odometry.update(getAngle(), leftDistance, rightDistance);
-        System.out.println("X: " + Math.round(odometry.getPoseMeters().getTranslation().getX()*1000.0)/1000.0);
-        System.out.println("Y: " + Math.round(odometry.getPoseMeters().getTranslation().getY()*1000.0)/1000.0);
+        //System.out.println("X: " + Math.round(odometry.getPoseMeters().getTranslation().getX()*1000.0)/1000.0);
+        //System.out.println("Y: " + Math.round(odometry.getPoseMeters().getTranslation().getY()*1000.0)/1000.0);
 	}
 
 	public boolean isEndSection(Pose2d robotPose){
@@ -137,7 +142,8 @@ public class Drive extends SubsystemBase{
 		if(currentTrajectory != null && isTrajectoryFinished != true){
 			State desiredState = currentTrajectory.getStates().get(trajectoryIndex);
 			if(isEndSection(desiredState.poseMeters)){
-				trajectoryIndex ++;
+                pathDistTraveled += Mathz.getDistance(currentTrajectory.getStates().get(trajectoryIndex).poseMeters, currentTrajectory.getStates().get(trajectoryIndex-1).poseMeters );
+                trajectoryIndex ++;
 				if(trajectoryIndex < currentTrajectory.getStates().size()){
 					desiredState = currentTrajectory.getStates().get(trajectoryIndex);
 				}
@@ -146,8 +152,22 @@ public class Drive extends SubsystemBase{
 				}
             }
 			setWheelVelocity(kinematics.toWheelSpeeds(ramseteController.calculate(getOdometry(), desiredState)));
-		}
-	}
+        }
+        else{
+            System.out.println("Auto Trajectory not set");
+        }
+    }
+    
+    public double getAutoPercentage(){
+        double deltaDist;
+        if(trajectoryIndex > 0){
+         deltaDist = Mathz.getDistance(currentTrajectory.getStates().get(trajectoryIndex-1).poseMeters, odometry.getPoseMeters());
+        }
+        else{
+            deltaDist = Mathz.getDistance(currentTrajectory.getInitialPose(), odometry.getPoseMeters());
+        }
+        return (pathDistTraveled+deltaDist)/ pathLength;
+    }
 
 	public boolean isTrajectoryDone(){
 		return isTrajectoryFinished;
@@ -155,7 +175,11 @@ public class Drive extends SubsystemBase{
 	
 	public void setTrajectory(Trajectory trajectory){
 		currentTrajectory = trajectory;
-		trajectoryIndex = 0;
+        trajectoryIndex = 0;
+        pathLength = 0;
+        for(int i = 0; i < trajectory.getStates().size() - 1; i++){
+            pathLength += Mathz.getDistance(currentTrajectory.getStates().get(i+1).poseMeters, currentTrajectory.getStates().get(i).poseMeters );
+        }
 	}
 	
     public double TicksToMeters(double ticks){
