@@ -1,7 +1,6 @@
 package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
-import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -20,7 +19,7 @@ public class Intake extends SubsystemBase{
     @Override
     public void periodic() {
       if(getConveyorSensor()){
-        setConveyor(0.3);
+        setConveyor(Constants.conveyorVoltage);
       }
       else{
         setConveyor(0);

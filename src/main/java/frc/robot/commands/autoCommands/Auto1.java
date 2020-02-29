@@ -38,21 +38,14 @@ public class Auto1 extends CommandBase {
    * @param subsystem The subsystem used by this command.
    */
 
-  public Auto1(Drive m_drive) {
+  public Auto1(Drive m_drive, ArrayList<Trajectory> m_trajectoryList) {
     drive = m_drive;
     addRequirements(drive);
   }
 
   @Override
   public void initialize() {
-    try {
-      Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON1);
-      Trajectory trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
-      trajectoryList.set(0, trajectory);
-    } catch (IOException ex) {
-      DriverStation.reportError("Unable to open trajectory: " + trajectoryJSON1, ex.getStackTrace());
-      trajectoryList.set(0,null);
-    }
+  
   }
 
   // Called every time the scheduler runs while the command is scheduled.

@@ -7,7 +7,11 @@
 
 package frc.robot;
 
+import java.io.IOException;
+import java.nio.file.Path;
+
 import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
@@ -15,6 +19,7 @@ import edu.wpi.first.wpilibj.SolenoidBase;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import frc.robot.commands.autoCommands.*;
 
 import frc.robot.subsystems.*;
@@ -41,7 +46,7 @@ public class RobotContainer {
   private NetworkTableEntry example = window.add("Example Entry", 0).getEntry();
 
      // smaller the value, higher the sensitivity adjustment
-     private ShuffleboardTab debugWindow = Shuffleboard.getTab("Drive");
+     private ShuffleboardTab debugWindow = Shuffleboard.getTab("Autonomous Selection");
      private NetworkTableEntry kP1 = debugWindow.add("kP1", 0).getEntry();
      private NetworkTableEntry kD1 = debugWindow.add("kD1", 0).getEntry();
      private NetworkTableEntry kP2 = debugWindow.add("kP2", 0).getEntry();
@@ -51,12 +56,12 @@ public class RobotContainer {
      private NetworkTableEntry velocityRightError = debugWindow.add("Right Error", 0).getEntry();
      private NetworkTableEntry velocity_left = debugWindow.add("velocity right", 0).withWidget("Velocity Left").getEntry();
      private NetworkTableEntry velocity_right = debugWindow.add("velocity left", 0).withWidget("Velocity Right").getEntry();
-
+     
 
   private Joystick joy_left = new Joystick(Constants.joystick_left);
   private Joystick joy_right = new Joystick(Constants.joystick_right);
 
-  private Auto1 auto = new Auto1(drive);
+  private Auto1 auto;
 
   /**
    * The container for the robot.  Contains subsystems, OI devices, and commands.
@@ -74,7 +79,7 @@ public class RobotContainer {
   }
 
   public void TeleopDrive(){
-    drive.setWheelPow(joy_left.getY(), joy_right.getY());
+    drive.rainbowDrive(joy_left.getY(), Math.atan(joy_right.getY()/joy_right.getX()) + Math.PI/2, joy_right.getMagnitude(), joy_right.getZ(), joy_right.getX() > 0);
     //drive.bangDrive(joy_left.getY(), Math.sin(getAngle(joy_right)), joy_left.getZ()>0.5); // create buffer time so it will take time for it switch
   }
 
@@ -90,15 +95,34 @@ public class RobotContainer {
     drive.calibratePeriodic(kP1.getDouble(0), kD1.getDouble(0), kP2.getDouble(0), kD2.getDouble(0), vel);
   }
 
+  
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // get it from network tables
+    
     return auto;
   }
+
+/*
+  public void loadAuto(){
+    try {
+      Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON1);
+      Trajectory trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+      trajectoryList.set(0, trajectory);
+    } catch (IOException ex) {
+      //DriverStation.reportError("Unable to open trajectory: " + trajectoryJSON1, ex.getStackTrace());
+      // output to ShuffleBoard
+      trajectoryList.set(0,null);
+    }
+    int automode 
+    switch(){
+
+    }
+  }
+  */
 
   public double getSystemVoltage(){
     return PDP.getVoltage();
@@ -107,5 +131,4 @@ public class RobotContainer {
   public double getTotalCurrent(){
       return PDP.getTotalCurrent();
   }
-
 }

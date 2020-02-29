@@ -154,6 +154,10 @@ public class Drive extends SubsystemBase{
 			setWheelVelocity(kinematics.toWheelSpeeds(ramseteController.calculate(getOdometry(), desiredState)));
         }
         else{
+            if(isTrajectoryFinished == true){
+                System.out.println("Auto Complete");
+            }
+            else
             System.out.println("Auto Trajectory not set");
         }
     }
@@ -194,8 +198,40 @@ public class Drive extends SubsystemBase{
 		return meters * 4096 / wheelCircumference;
 	}
 	
-    public void teleopDrive(double mag, double turn, double z){
-        
+    public void rainbowDrive(double mag, double turn, double turnMag, double z, boolean isRight){
+        double deltaV = Math.sin(turn + Math.PI/2)*turnMag;
+        // double sensitivity = Math.pow(Math.abs(mag) + 1, -1 / sensitivityScaler*(z+min));
+        // deltaV *= sensitivity
+        if(!isRight){
+            deltaV *= -1;
+        }
+        double vel_left = Math.copySign( Math.pow(mag, 2), mag) + deltaV;
+        double vel_right = Math.copySign( Math.pow(mag, 2), mag) - deltaV;
+        setWheelPow(vel_left, vel_right);
+        /*
+        double radius = 1/Math.sin(turn); // change 24 to value appropriate for our robot
+        //double deltaV = (Constants.trackWidth * Math.PI) * (mag * Drivemultiplier / radius);
+        //double sensitivity = Math.pow(Math.abs(mag) + 1, -1 / Constants.sensitivityScaler);
+        //deltaV *= sensitivity;
+        double deltaV = Drivemultiplier*(Math.sin(turn)); // (Ziggy Tuner)
+        double vel_left = mag + deltaV;
+        double vel_right = mag - deltaV;
+        if(vel_left > 1.0){
+            vel_right -= (vel_left-1.0);
+            vel_left = 1.0;
+        }
+        else if(vel_right > 1.0){
+            vel_left -= (vel_right-1.0);
+            vel_right = 1.0;
+        } else if(vel_left < -1.0){
+            vel_right += (-vel_left -1.0);
+            vel_left = -1.0;
+        } else if(vel_right < -1.0){
+            vel_left += (-vel_right -1.0);
+            vel_right = -1.0;
+        }
+        setWheelPow(vel_left, vel_right);
+        */
 	}
 	
     public double getVoltage(){
