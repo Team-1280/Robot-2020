@@ -26,15 +26,19 @@ public class Limelight extends SubsystemBase{
     }
 
     public double getx(){
-        return tx.getDouble(0.0);
+        return tx.getDouble(999);
     }
 
     public double gety(){
-        return ty.getDouble(0.0);
+        return ty.getDouble(999);
     }
 
     public double geta(){
-        return ta.getDouble(0.0);
+        return ta.getDouble(0);
+    }
+
+    public boolean isConnected(){
+        return gety() != 999;
     }
 
     /*
