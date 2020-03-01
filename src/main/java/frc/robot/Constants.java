@@ -16,4 +16,12 @@ package frc.robot;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
+
+    public final static double mountAngle = 0; // in degrees
+
+    public final static double realDistance = 31.25; // 18 inches, 28 inches
+    public final static double limelightHeight = 0.917; //Mid:8.5 Bottom:7 Top: 9.25
+    public final static double tapeHeight = 8.2917;// Bottom:13 Mid:14 Top:15
+
+    
 }
