@@ -14,8 +14,8 @@ public class LazyVictorSPX extends VictorSPX {
 
 	public LazyVictorSPX(int deviceNumber) {
 		super(deviceNumber);
-		enableVoltageCompensation(true);
 		configVoltageCompSaturation(12, 10);
+		enableVoltageCompensation(true);
 	}
 
 	@Override
