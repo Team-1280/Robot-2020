@@ -72,8 +72,7 @@ public class RobotContainer {
   }
 
   public void TeleopDrive(){
-    drive.rainbowDrive(joy_left.getY(), Math.atan(joy_right.getY()/joy_right.getX()) + Math.PI/2, joy_right.getMagnitude(), joy_right.getZ(), joy_right.getX() > 0);
-    //drive.bangDrive(joy_left.getY(), Math.sin(getAngle(joy_right)), joy_left.getZ()>0.5); // create buffer time so it will take time for it switch
+    drive.curveDrive(joy_left.getY(), joy_right.getX(), joy_right.getTop());
   }
 
   public void calibrateTester(){

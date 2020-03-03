@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.Trajectory.State;
 import edu.wpi.first.wpilibj.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpiutil.math.MathUtil;
 import frc.robot.Constants;
 import frc.robot.util.LazyTalonSRX;
 import frc.robot.util.LazyVictorSPX;
@@ -33,7 +34,10 @@ public class Drive extends SubsystemBase{
     private int trajectoryIndex = 0;
     private double pathLength = 0;
     private double pathDistTraveled = 0;
-	private boolean isTrajectoryFinished = false;
+    private boolean isTrajectoryFinished = false;
+
+    private double m_quickStopAccumulator = 0;
+    
 
     private DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(Units.inchesToMeters(Constants.trackWidth));
 
@@ -198,41 +202,67 @@ public class Drive extends SubsystemBase{
 		return meters * 4096 / wheelCircumference;
 	}
 	
-    public void rainbowDrive(double mag, double turn, double turnMag, double z, boolean isRight){
-        double deltaV = Math.sin(turn + Math.PI/2)*turnMag;
-        // double sensitivity = Math.pow(Math.abs(mag) + 1, -1 / sensitivityScaler*(z+min));
-        // deltaV *= sensitivity
-        if(!isRight){
-            deltaV *= -1;
+    public void curveDrive(double xSpeed, double zRotation, boolean isQuickTurn){
+        xSpeed = MathUtil.clamp(xSpeed, -1.0, 1.0);
+        xSpeed = Mathz.applyDeadband(xSpeed, Constants.drive_deadband);
+
+        zRotation = MathUtil.clamp(zRotation, -1.0, 1.0);
+        zRotation = Mathz.applyDeadband(zRotation, Constants.drive_deadband);
+
+        double angularPower;
+        boolean overPower;
+
+        if (isQuickTurn) {
+            if (Math.abs(xSpeed) < Constants.quickStopThreshold) {
+                m_quickStopAccumulator = (1 - Constants.quickStopAlpha) * m_quickStopAccumulator
+                    + Constants.quickStopAlpha * MathUtil.clamp(zRotation, -1.0, 1.0) * 2;
+            }
+        overPower = true;
+        angularPower = zRotation;
+        } else {
+            overPower = false;
+            angularPower = Math.abs(xSpeed) * zRotation - m_quickStopAccumulator;
+
+        if (m_quickStopAccumulator > 1) {
+            m_quickStopAccumulator -= 1;
+        } else if (m_quickStopAccumulator < -1) {
+            m_quickStopAccumulator += 1;
+        } else {
+            m_quickStopAccumulator = 0.0;
         }
-        double vel_left = Math.copySign( Math.pow(mag, 2), mag) + deltaV;
-        double vel_right = Math.copySign( Math.pow(mag, 2), mag) - deltaV;
-        setWheelPow(vel_left, vel_right);
-        /*
-        double radius = 1/Math.sin(turn); // change 24 to value appropriate for our robot
-        //double deltaV = (Constants.trackWidth * Math.PI) * (mag * Drivemultiplier / radius);
-        //double sensitivity = Math.pow(Math.abs(mag) + 1, -1 / Constants.sensitivityScaler);
-        //deltaV *= sensitivity;
-        double deltaV = Drivemultiplier*(Math.sin(turn)); // (Ziggy Tuner)
-        double vel_left = mag + deltaV;
-        double vel_right = mag - deltaV;
-        if(vel_left > 1.0){
-            vel_right -= (vel_left-1.0);
-            vel_left = 1.0;
         }
-        else if(vel_right > 1.0){
-            vel_left -= (vel_right-1.0);
-            vel_right = 1.0;
-        } else if(vel_left < -1.0){
-            vel_right += (-vel_left -1.0);
-            vel_left = -1.0;
-        } else if(vel_right < -1.0){
-            vel_left += (-vel_right -1.0);
-            vel_right = -1.0;
+
+        double leftMotorOutput = xSpeed + angularPower;
+        double rightMotorOutput = xSpeed - angularPower;
+
+        // If rotation is overpowered, reduce both outputs to within acceptable range
+        if (overPower) {
+        if (leftMotorOutput > 1.0) {
+            rightMotorOutput -= leftMotorOutput - 1.0;
+            leftMotorOutput = 1.0;
+        } else if (rightMotorOutput > 1.0) {
+            leftMotorOutput -= rightMotorOutput - 1.0;
+            rightMotorOutput = 1.0;
+        } else if (leftMotorOutput < -1.0) {
+            rightMotorOutput -= leftMotorOutput + 1.0;
+            leftMotorOutput = -1.0;
+        } else if (rightMotorOutput < -1.0) {
+            leftMotorOutput -= rightMotorOutput + 1.0;
+            rightMotorOutput = -1.0;
         }
-        setWheelPow(vel_left, vel_right);
-        */
-	}
+        }
+
+        // Normalize the wheel speeds
+        double maxMagnitude = Math.max(Math.abs(leftMotorOutput), Math.abs(rightMotorOutput));
+        if (maxMagnitude > 1.0) {
+        leftMotorOutput /= maxMagnitude;
+        rightMotorOutput /= maxMagnitude;
+        }
+
+        setWheelPow(leftMotorOutput, rightMotorOutput);
+    }
+    
+   
 	
     public double getVoltage(){
         return (talon_left.getMotorOutputVoltage() + talon_right.getMotorOutputVoltage() + victor_left.getMotorOutputVoltage()+ victor_right.getMotorOutputVoltage())/4.0;

@@ -92,6 +92,12 @@ public final class Constants {
      public static final double driveTrainKSLeft = 0;
      public static final double driveTrainKSRight = 0;
 
+     // drive control constants
+     public static final double quickStopThreshold = 0.2;
+     public static final double quickStopAlpha = 0.1;
+     public static final double drive_maxOutput = 1.0;
+     public static final double drive_deadband = 0.05;
+
      // Shooter Constants
      public static final double ShooterGearing = 0; // 10?
      public static final double MotorConstant_775 = 1561; // RPM/Volt

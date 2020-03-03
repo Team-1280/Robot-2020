@@ -37,4 +37,16 @@ public class Mathz {
         double deltaY2 = Math.pow(p1.getTranslation().getY() - p2.getTranslation().getY(),2);
         return Math.sqrt(deltaX2 + deltaY2);
     }
+
+    public static double applyDeadband(double value, double deadband) {
+        if (Math.abs(value) > deadband) {
+          if (value > 0.0) {
+            return (value - deadband) / (1.0 - deadband);
+          } else {
+            return (value + deadband) / (1.0 - deadband);
+          }
+        } else {
+          return 0.0;
+        }
+      }
 }
