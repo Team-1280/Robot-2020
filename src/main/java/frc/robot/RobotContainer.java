@@ -13,11 +13,15 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
+import frc.robot.commands.BackwardsHopper;
+import frc.robot.commands.ForwardsHopper;
+import frc.robot.commands.IntakeBalls;
 import frc.robot.commands.autoCommands.*;
 
 import frc.robot.subsystems.*;
 import frc.robot.util.Mathz;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
@@ -34,6 +38,11 @@ public class RobotContainer {
   private final Drive drive = new Drive();
   private final Shooter shoot = new Shooter();
   private final Intake intake = new Intake(PDP);
+
+  private final Command intakeBalls = new IntakeBalls(intake); 
+  private final Command backHopper = new BackwardsHopper(intake); 
+  private final Command forwardHopper = new ForwardsHopper(intake); 
+
 
   private ShuffleboardTab window = Shuffleboard.getTab("Drive");
   private NetworkTableEntry example = window.add("Example Entry", 0).getEntry();
@@ -53,6 +62,11 @@ public class RobotContainer {
 
   private Joystick joy_left = new Joystick(Constants.joystick_left);
   private Joystick joy_right = new Joystick(Constants.joystick_right);
+  private XboxController xbox = new XboxController(Constants.Xbox);
+
+  private JoystickButton intakeButton = new JoystickButton(xbox, 1);
+
+  private JoystickButton hopperButton = new JoystickButton(xbox, 2);
 
   private Auto1 auto;
 
@@ -66,9 +80,10 @@ public class RobotContainer {
     SolenoidBase.clearAllPCMStickyFaults(0);
   }
 
-
   private void configureButtonBindings() {
-    
+    intakeButton.whenPressed(intakeBalls);
+    hopperButton.whenPressed(forwardHopper);
+    hopperButton.whenInactive(backHopper);
   }
 
   public void TeleopDrive(){
@@ -88,7 +103,6 @@ public class RobotContainer {
     drive.calibratePeriodic(kP1.getDouble(0), kD1.getDouble(0), kP2.getDouble(0), kD2.getDouble(0), vel);
   }
 
-  
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *

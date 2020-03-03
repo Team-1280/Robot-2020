@@ -1,6 +1,5 @@
 package frc.robot;
 
-import frc.robot.subsystems.Shooter;
 import frc.robot.util.Mathz;
 
 public final class Constants {
@@ -27,7 +26,10 @@ public final class Constants {
     public static final int CANLeftVictor = 1;
     public static final int CANRightVictor = 2;
     public static final int CANLeftShooter = 4;
-    public static final int CANRightShooter = 4;
+    public static final int CANRightShooter = 5;
+    public static final int CANBallSysIntake = 6;
+    public static final int CANBallSysHopper = 7;
+    public static final int CANBallSysConveyor = 8;
 
 
     // CAN bus timings
@@ -50,6 +52,7 @@ public final class Constants {
 
     public static final int joystick_left = 0;
     public static final int joystick_right = 1;
+    public static final int Xbox = 2;
    
 //-----------------------------------------------------
 //Robot details & Coefficents
@@ -103,8 +106,4 @@ public final class Constants {
 
      // 
      public static final double conveyorVoltage = 0;
-
-     // Robot Drive Constants 
-
-
 }
