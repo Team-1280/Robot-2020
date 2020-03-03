@@ -25,12 +25,6 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 public class Auto1 extends CommandBase {
 
   private Drive drive;
-  private ArrayList<Trajectory> trajectoryList = new ArrayList<Trajectory>(1);
-  private int trajectoryIndex = 0;
-  private boolean isDone = false;
-
-  private final String trajectoryJSON1 = "paths/YourPath.wpilib.json";
-  
 
   /**
    * Creates a new ExampleCommand.
@@ -38,7 +32,7 @@ public class Auto1 extends CommandBase {
    * @param subsystem The subsystem used by this command.
    */
 
-  public Auto1(Drive m_drive, ArrayList<Trajectory> m_trajectoryList) {
+  public Auto1(Drive m_drive) {
     drive = m_drive;
     addRequirements(drive);
   }
@@ -51,20 +45,8 @@ public class Auto1 extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    if(!drive.isTrajectoryDone()){
-    drive.updateAuto();
-    }
-    else{
-      isDone = true;
-    }
-    /*
-    else{
-      //trajectoryIndex ++;
-      //drive.setTrajectory(trajectoryList.get(trajectoryIndex))
-    }
-    */
-    // update trajectory until @ end of path
-      // @ certain points along path, call other commands
+    
+    
   }
 
   // Called once the command ends or is interrupted.

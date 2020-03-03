@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.util.LazyVictorSPX;
 import frc.robot.util.Mathz;
+
 public class Intake extends SubsystemBase{
    private LazyVictorSPX victorIntake = new LazyVictorSPX(Constants.PWMIntake1);
    private LazyVictorSPX victorConveyor = new LazyVictorSPX(Constants.PWMConveyorBelt);

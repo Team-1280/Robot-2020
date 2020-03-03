@@ -1,5 +1,7 @@
 package frc.robot;
 
+import edu.wpi.first.wpilibj.geometry.Pose2d;
+import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import frc.robot.subsystems.Shooter;
 import frc.robot.util.Mathz;
 
@@ -85,6 +87,7 @@ public final class Constants {
      // Ramsete Controller constants
      public static final double kRamseteB = 2.0;
      public static final double kRamseteZeta = 0.7;
+     public static final Pose2d poseTolerance = new Pose2d(0.1, 0.1, new Rotation2d(Math.PI/180)); // within 1 degree & 0.1 meters
 
      // Feedforward constants
      public static final double driveTrainKV = 0;

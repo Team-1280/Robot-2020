@@ -1,7 +1,11 @@
 package frc.robot.util;
 
+import java.util.List;
+
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
+import edu.wpi.first.wpilibj.trajectory.Trajectory;
+import edu.wpi.first.wpilibj.trajectory.Trajectory.State;
 
 public class Mathz {
     public static double getAngle(Joystick joy){
@@ -32,9 +36,14 @@ public class Mathz {
         return percentOutput * max / SystemVoltage;
     }
 
-    public static double getDistance(Pose2d p1, Pose2d p2){
-        double deltaX2 = Math.pow(p1.getTranslation().getX() - p2.getTranslation().getX(),2);
-        double deltaY2 = Math.pow(p1.getTranslation().getY() - p2.getTranslation().getY(),2);
-        return Math.sqrt(deltaX2 + deltaY2);
+    public static double getTrajectoryLength(Trajectory trajectory){
+       List<State> traj = trajectory.getStates();
+       int arraySize = traj.size();
+       double pathLength = 0.0;
+
+       for(int i = 0; i < arraySize; i++){
+        traj.get(i);
+       }
+       return 0;
     }
 }

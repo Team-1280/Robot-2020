@@ -5,6 +5,7 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import edu.wpi.first.wpilibj.controller.RamseteController;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
@@ -28,12 +29,7 @@ public class Drive extends SubsystemBase{
 	private ADIS16448_IMU gyro = new ADIS16448_IMU();
 	
 	private DifferentialDriveOdometry odometry = new DifferentialDriveOdometry(getAngle());
-	private RamseteController ramseteController = new RamseteController(Constants.kRamseteB, Constants.kRamseteZeta);
-	private Trajectory currentTrajectory;
-    private int trajectoryIndex = 0;
-    private double pathLength = 0;
-    private double pathDistTraveled = 0;
-	private boolean isTrajectoryFinished = false;
+
 
     private DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(Units.inchesToMeters(Constants.trackWidth));
 
@@ -95,7 +91,6 @@ public class Drive extends SubsystemBase{
         talon_right.config_kD(0, kD2, 10);
         talon_left.configClosedloopRamp(12d / 200d, 10);
         talon_right.configClosedloopRamp(12d / 200d, 10);
-        setWheelVelocity(new DifferentialDriveWheelSpeeds(vel, vel));
 	}
 	
 	@Override
@@ -112,11 +107,15 @@ public class Drive extends SubsystemBase{
         talon_left.set(ControlMode.PercentOutput, left, DemandType.ArbitraryFeedForward, Math.copySign(Constants.driveTrainKSRight / 12.0, left));
     }
 
-    public void setWheelVelocity(DifferentialDriveWheelSpeeds  speeds) {
+
+    // only use for auto !!! 
+    public void setWheelVelocity(DifferentialDriveWheelSpeeds speeds, double leftFeedFoward, double rightFeedFoward) {
         double leftSpeed = speeds.leftMetersPerSecond;
         double rightSpeed = speeds.rightMetersPerSecond;
-        talon_left.set(ControlMode.Velocity, leftSpeed, DemandType.ArbitraryFeedForward, Math.copySign(Constants.driveTrainKSLeft / 12.0, leftSpeed));
-        talon_right.set(ControlMode.Velocity, rightSpeed, DemandType.ArbitraryFeedForward, Math.copySign((Constants.driveTrainKSRight) / 12.0, rightSpeed));
+        double leftEncoderSpeed = metersToEncoderTicks(leftSpeed);
+        double rightEncoderSpeed = metersToEncoderTicks(rightSpeed);
+        talon_left.set(ControlMode.Velocity, leftEncoderSpeed, DemandType.ArbitraryFeedForward, leftFeedFoward);
+        talon_right.set(ControlMode.Velocity, rightEncoderSpeed, DemandType.ArbitraryFeedForward, rightFeedFoward);
 	}
 	
     public void updateOdometry(){
@@ -135,55 +134,6 @@ public class Drive extends SubsystemBase{
 			finished = true;
 		}
 		return finished;
-	}
-
-	public void updateAuto(){
-		updateOdometry();
-		if(currentTrajectory != null && isTrajectoryFinished != true){
-			State desiredState = currentTrajectory.getStates().get(trajectoryIndex);
-			if(isEndSection(desiredState.poseMeters)){
-                pathDistTraveled += Mathz.getDistance(currentTrajectory.getStates().get(trajectoryIndex).poseMeters, currentTrajectory.getStates().get(trajectoryIndex-1).poseMeters );
-                trajectoryIndex ++;
-				if(trajectoryIndex < currentTrajectory.getStates().size()){
-					desiredState = currentTrajectory.getStates().get(trajectoryIndex);
-				}
-				else{
-					isTrajectoryFinished = true;
-				}
-            }
-			setWheelVelocity(kinematics.toWheelSpeeds(ramseteController.calculate(getOdometry(), desiredState)));
-        }
-        else{
-            if(isTrajectoryFinished == true){
-                System.out.println("Auto Complete");
-            }
-            else
-            System.out.println("Auto Trajectory not set");
-        }
-    }
-    
-    public double getAutoPercentage(){
-        double deltaDist;
-        if(trajectoryIndex > 0){
-         deltaDist = Mathz.getDistance(currentTrajectory.getStates().get(trajectoryIndex-1).poseMeters, odometry.getPoseMeters());
-        }
-        else{
-            deltaDist = Mathz.getDistance(currentTrajectory.getInitialPose(), odometry.getPoseMeters());
-        }
-        return (pathDistTraveled+deltaDist)/ pathLength;
-    }
-
-	public boolean isTrajectoryDone(){
-		return isTrajectoryFinished;
-	}
-	
-	public void setTrajectory(Trajectory trajectory){
-		currentTrajectory = trajectory;
-        trajectoryIndex = 0;
-        pathLength = 0;
-        for(int i = 0; i < trajectory.getStates().size() - 1; i++){
-            pathLength += Mathz.getDistance(currentTrajectory.getStates().get(i+1).poseMeters, currentTrajectory.getStates().get(i).poseMeters );
-        }
 	}
 	
     public double TicksToMeters(double ticks){
