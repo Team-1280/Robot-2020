@@ -2,7 +2,6 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
-import frc.robot.subsystems.Shooter;
 import frc.robot.util.Mathz;
 
 public final class Constants {

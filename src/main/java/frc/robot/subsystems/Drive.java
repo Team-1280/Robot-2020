@@ -4,22 +4,16 @@ import com.analog.adis16448.frc.ADIS16448_IMU;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import edu.wpi.first.wpilibj.controller.RamseteController;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.geometry.Translation2d;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
-import edu.wpi.first.wpilibj.trajectory.Trajectory;
-import edu.wpi.first.wpilibj.trajectory.Trajectory.State;
 import edu.wpi.first.wpilibj.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.util.LazyTalonSRX;
 import frc.robot.util.LazyVictorSPX;
-import frc.robot.util.Mathz;
 
 public class Drive extends SubsystemBase{
     private LazyTalonSRX talon_left = new LazyTalonSRX(Constants.CANLeftTalon);
@@ -91,11 +85,12 @@ public class Drive extends SubsystemBase{
         talon_right.config_kD(0, kD2, 10);
         talon_left.configClosedloopRamp(12d / 200d, 10);
         talon_right.configClosedloopRamp(12d / 200d, 10);
-	}
+    }
+ 
 	
 	@Override
     public void periodic() {
-
+        updateOdometry();
     }
 	
     public void calibrateGyro(){
@@ -116,7 +111,12 @@ public class Drive extends SubsystemBase{
         double rightEncoderSpeed = metersToEncoderTicks(rightSpeed);
         talon_left.set(ControlMode.Velocity, leftEncoderSpeed, DemandType.ArbitraryFeedForward, leftFeedFoward);
         talon_right.set(ControlMode.Velocity, rightEncoderSpeed, DemandType.ArbitraryFeedForward, rightFeedFoward);
-	}
+    }
+    
+       
+    public void setPosition(Pose2d startingPose){
+        odometry = new DifferentialDriveOdometry(getAngle(), startingPose);
+    }
 	
     public void updateOdometry(){
         double leftDistance = TicksToMeters(talon_left.getSelectedSensorPosition(0));
@@ -124,16 +124,6 @@ public class Drive extends SubsystemBase{
         odometry.update(getAngle(), leftDistance, rightDistance);
         //System.out.println("X: " + Math.round(odometry.getPoseMeters().getTranslation().getX()*1000.0)/1000.0);
         //System.out.println("Y: " + Math.round(odometry.getPoseMeters().getTranslation().getY()*1000.0)/1000.0);
-	}
-
-	public boolean isEndSection(Pose2d robotPose){
-		boolean finished = false;
-		Translation2d poseError = robotPose.getTranslation();
-		poseError.plus(getOdometry().getTranslation().times(-1));
-		if(Math.abs(poseError.getX()) < Constants.PathTolerance && Math.abs(poseError.getY()) < Constants.PathTolerance){
-			finished = true;
-		}
-		return finished;
 	}
 	
     public double TicksToMeters(double ticks){

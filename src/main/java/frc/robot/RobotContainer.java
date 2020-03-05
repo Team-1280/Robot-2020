@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
+import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
 import frc.robot.commands.autoCommands.*;
 
 import frc.robot.subsystems.*;
@@ -39,7 +40,10 @@ public class RobotContainer {
   private NetworkTableEntry example = window.add("Example Entry", 0).getEntry();
 
      // smaller the value, higher the sensitivity adjustment
-     private ShuffleboardTab debugWindow = Shuffleboard.getTab("Autonomous Selection");
+     private ShuffleboardTab roboBoard = Shuffleboard.getTab("Robot Dashboard");
+     private NetworkTableEntry autoSelector = roboBoard.add("Auto Selector", 0).getEntry();
+
+     /*
      private NetworkTableEntry kP1 = debugWindow.add("kP1", 0).getEntry();
      private NetworkTableEntry kD1 = debugWindow.add("kD1", 0).getEntry();
      private NetworkTableEntry kP2 = debugWindow.add("kP2", 0).getEntry();
@@ -47,8 +51,9 @@ public class RobotContainer {
      private NetworkTableEntry velocity = debugWindow.add("Velocity", 0).getEntry();
      private NetworkTableEntry velocityLeftError = debugWindow.add("Left Error", 0).getEntry();
      private NetworkTableEntry velocityRightError = debugWindow.add("Right Error", 0).getEntry();
-     private NetworkTableEntry velocity_left = debugWindow.add("velocity right", 0).withWidget("Velocity Left").getEntry();
-     private NetworkTableEntry velocity_right = debugWindow.add("velocity left", 0).withWidget("Velocity Right").getEntry();
+     private NetworkTableEntry velocity_left = debugWindow.add("velocity right", 0).getEntry();
+     private NetworkTableEntry velocity_right = debugWindow.add("velocity left", 0).getEntry();
+     */
      
 
   private Joystick joy_left = new Joystick(Constants.joystick_left);
@@ -76,6 +81,7 @@ public class RobotContainer {
     //drive.bangDrive(joy_left.getY(), Math.sin(getAngle(joy_right)), joy_left.getZ()>0.5); // create buffer time so it will take time for it switch
   }
 
+  /*
   public void calibrateTester(){
     double vel = velocity.getDouble(0);
     double vel_right = drive.getSpeedRight();
@@ -87,6 +93,7 @@ public class RobotContainer {
 
     drive.calibratePeriodic(kP1.getDouble(0), kD1.getDouble(0), kP2.getDouble(0), kD2.getDouble(0), vel);
   }
+  */
 
   
   /**
@@ -95,27 +102,26 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    
+    ///autoSelector.getSel
     return auto;
   }
 
-/*
-  public void loadAuto(){
+
+  public void loadAuto(int automode){
+    String trajectoryJSON1 = ""; 
+    switch(automode){
+      case 1:
+      break;
+    }
     try {
       Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON1);
       Trajectory trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
-      trajectoryList.set(0, trajectory);
     } catch (IOException ex) {
       //DriverStation.reportError("Unable to open trajectory: " + trajectoryJSON1, ex.getStackTrace());
       // output to ShuffleBoard
-      trajectoryList.set(0,null);
-    }
-    int automode 
-    switch(){
-
     }
   }
-  */
+  
 
   public double getSystemVoltage(){
     return PDP.getVoltage();
