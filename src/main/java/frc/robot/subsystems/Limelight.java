@@ -18,6 +18,7 @@ public class Limelight extends SubsystemBase{
         tx = table.getEntry("tx");
         ty = table.getEntry("ty");
         ta = table.getEntry("ta");
+        setLED(1);
     }
 
     @Override
@@ -39,7 +40,7 @@ public class Limelight extends SubsystemBase{
 
     public boolean isConnected(){
         return gety() != 999;
-    }
+    } 
 
     /*
     @param int state: ledMode state
@@ -53,6 +54,7 @@ public class Limelight extends SubsystemBase{
     }
 
     public double getLimelightDistance(){
+        //
         double deltaH = Constants.tapeHeight - Constants.limelightHeight;
         double distanceFeet = ((deltaH) / Math.tan(Math.toRadians(gety()+Constants.mountAngle)));
 

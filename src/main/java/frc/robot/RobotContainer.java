@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.SolenoidBase;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import frc.robot.commands.BackwardsHopper;
 import frc.robot.commands.ForwardsHopper;
@@ -38,6 +39,8 @@ public class RobotContainer {
   private final Drive drive = new Drive();
   private final Shooter shoot = new Shooter();
   private final Intake intake = new Intake(PDP);
+
+  private final Limelight limelight = new Limelight();
 
   private final Command intakeBalls = new IntakeBalls(intake); 
   private final Command backHopper = new BackwardsHopper(intake); 
@@ -130,6 +133,11 @@ public class RobotContainer {
     }
   }
   */
+
+  public void smartDashboard(){
+    SmartDashboard.putNumber("Shooter offset from the middle of the goal: ", limelight.gety());
+    // Shuffleboard.getTab("kP1 , 0"); 
+  }
 
   public double getSystemVoltage(){
     return PDP.getVoltage();

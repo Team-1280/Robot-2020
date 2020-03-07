@@ -198,7 +198,7 @@ public class Drive extends SubsystemBase{
 		return meters * 4096 / wheelCircumference;
 	}
 	
-    public void rainbowDrive(double mag, double turn, double turnMag, double z, boolean isRight){
+    public void   rainbowDrive(double mag, double turn, double turnMag, double z, boolean isRight){
         double deltaV = Math.sin(turn + Math.PI/2)*turnMag;
         // double sensitivity = Math.pow(Math.abs(mag) + 1, -1 / sensitivityScaler*(z+min));
         // deltaV *= sensitivity

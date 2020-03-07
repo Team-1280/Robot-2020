@@ -1,16 +1,15 @@
 package frc.robot;
 
+import edu.wpi.first.wpilibj.util.Units;
 import frc.robot.util.Mathz;
 
 public final class Constants {
 
-    public final static double mountAngle = 0; // in degrees
+    public final static double mountAngle = 40; // in degrees
 
     public final static double realDistance = 31.25; // 18 inches, 28 inches
-    public final static double limelightHeight = 0.917; //Mid:8.5 Bottom:7 Top: 9.25
-    public final static double tapeHeight = 8.2917;// Bottom:13 Mid:14 Top:15
-
-    
+    public final static double limelightHeight = Units.inchesToMeters(24); //Mid:8.5 Bottom:7 Top: 9.25
+    public final static double tapeHeight = 8.2917;// Bottom:13 Mid:14 Top:15    
     
 //-----------------------------------------------------
 //CAN Bus information
@@ -33,7 +32,7 @@ public final class Constants {
 
 
     // CAN bus timings
-    public static final int CAN_Update_Rate = 5; // 5 miliseconds
+    public static final int CAN_Update_Rate = 10; // 5 miliseconds
     public static final int kTimeoutMs = 10;
 
     // 'direction' of sensors
@@ -44,9 +43,9 @@ public final class Constants {
 //-----------------------------------------------------
 //Robot Ports
 //------------------------------------------------------
-    public static final int PWMIntake1 = 0;
-    public static final int PWMConveyorBelt = 1;
-    public static final int PWMHopper = 2;
+    public static final int PWMDeployer = 0;
+    public static final int PWMClimbMtr1 = 1;
+    public static final int PWMClimbMtr2 = 2;
 
     public static final int DIOphotoElectric = 0;
 
@@ -59,8 +58,9 @@ public final class Constants {
 //------------------------------------------------------
 
     // robot details
-    public static final double wheelDiameter = 6;
-    public static final double trackWidth = 0; // distance between left wheels and right wheels
+    public static final double wheelDiameter = 6; 
+     // distance between left wheels and right wheels
+    public static final double trackWidth = 9 + 11.0/16.0; // inches 
 
     
     // Drive Train PFD control loop coefficents
@@ -96,7 +96,7 @@ public final class Constants {
      public static final double driveTrainKSRight = 0;
 
      // Shooter Constants
-     public static final double ShooterGearing = 0; // 10?
+     public static final double ShooterGearing = 4; 
      public static final double MotorConstant_775 = 1561; // RPM/Volt
      public static final boolean boolLeftSensorPhase = false;
      public static final boolean boolRightSensorPhase = false;
