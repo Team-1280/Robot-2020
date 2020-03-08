@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.SolenoidBase;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -35,6 +36,7 @@ public class RobotContainer {
   private final Drive drive = new Drive();
   private final Shooter shoot = new Shooter();
   private final Intake intake = new Intake(PDP);
+  private final Limelight vision = new Limelight();
 
   private ShuffleboardTab window = Shuffleboard.getTab("Drive");
   private NetworkTableEntry example = window.add("Example Entry", 0).getEntry();
@@ -61,6 +63,10 @@ public class RobotContainer {
 
   private Auto1 auto;
 
+  private Timer timer = new Timer();
+  private double lastTime;
+  private double lastOffset;
+
   /**
    * The container for the robot.  Contains subsystems, OI devices, and commands.
    */
@@ -76,8 +82,26 @@ public class RobotContainer {
     
   }
 
+  public void initTimer(){
+    timer.start();
+    lastTime = timer.get();
+    lastOffset = vision.getx();
+  }
+
   public void TeleopDrive(){
-    drive.rainbowDrive(joy_left.getY(), Math.atan(joy_right.getY()/joy_right.getX()) + Math.PI/2, joy_right.getMagnitude(), joy_right.getZ(), joy_right.getX() > 0);
+    double currentTime = timer.get();
+    double dt = currentTime - lastTime;
+    double offset = vision.getx();
+    if(!joy_right.getTrigger())
+      drive.rainbowDrive(joy_left.getY(), Math.atan(joy_right.getY()/joy_right.getX()) + Math.PI/2, joy_right.getMagnitude(), joy_right.getZ(), joy_right.getX() > 0);
+    else{
+      double correction = Constants.AlignKP * offset + Constants.AlignKD * (offset - lastOffset)/dt;
+      double power = Mathz.poweredScale(joy_left.getY(), 2);
+      drive.setWheelPow(power + correction, power - correction);
+    }
+    double lastTime = timer.get();
+    lastOffset = offset;
+
     //drive.bangDrive(joy_left.getY(), Math.sin(getAngle(joy_right)), joy_left.getZ()>0.5); // create buffer time so it will take time for it switch
   }
 
@@ -106,7 +130,6 @@ public class RobotContainer {
     return auto;
   }
 
-
   public void loadAuto(int automode){
     String trajectoryJSON1 = ""; 
     switch(automode){
@@ -122,7 +145,6 @@ public class RobotContainer {
     }
   }
   
-
   public double getSystemVoltage(){
     return PDP.getVoltage();
   }

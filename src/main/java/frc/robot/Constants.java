@@ -100,13 +100,16 @@ public final class Constants {
      public static final boolean boolLeftSensorPhase = false;
      public static final boolean boolRightSensorPhase = false;
 
-     // 
+     // robot drive constants
      public static final double PathTolerance = 0.05;
 
      // 
      public static final double conveyorVoltage = 0;
 
-     // Robot Drive Constants 
+     // Robot Drive Constants '
+     
+     public static final double AlignKP = 0;
+     public static final double AlignKD = 0;
 
 
 }

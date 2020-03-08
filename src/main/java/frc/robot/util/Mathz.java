@@ -46,4 +46,8 @@ public class Mathz {
        }
        return 0;
     }
+
+    public static double poweredScale(double value, double power){
+        return Math.copySign(Math.pow(value, 2), power);
+    }
 }
