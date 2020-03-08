@@ -46,7 +46,7 @@ public final class Constants {
     public static final int PWMDeployer = 2;
     public static final int PWMClimbMtr1 = 0;
     public static final int PWMClimbMtr2 = 2;
-    public static final int PWMConveyorBelt= 3;
+    public static final int PWMConveyorBelt= 4;
 
     public static final int DIOphotoElectric = 0;
 
@@ -106,5 +106,5 @@ public final class Constants {
      public static final double PathTolerance = 0.05;
 
      // 
-     public static final double conveyorVoltage = 0;
+     public static final double conveyorVoltage = 0.7;
 }

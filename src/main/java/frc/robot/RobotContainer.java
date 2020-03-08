@@ -34,7 +34,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // Global Stuff 
-  private PowerDistributionPanel PDP = new PowerDistributionPanel();
+  //private PowerDistributionPanel PDP = new PowerDistributionPanel();
 
   // The robot's subsystems and commands are defined here...
   private final Drive drive = new Drive();
@@ -53,16 +53,15 @@ public class RobotContainer {
 
     // smaller the value, higher the sensitivity adjustment
     private ShuffleboardTab debugWindow = Shuffleboard.getTab("Autonomous Selection");
-    private NetworkTableEntry kP1 = debugWindow.add("kP1", 0).getEntry();
-    private NetworkTableEntry kD1 = debugWindow.add("kD1", 0).getEntry();
-    private NetworkTableEntry kP2 = debugWindow.add("kP2", 0).getEntry();
-    private NetworkTableEntry kD2 = debugWindow.add("kD2", 0).getEntry();
-    private NetworkTableEntry velocity = debugWindow.add("Velocity", 0).getEntry();
-    private NetworkTableEntry velocityLeftError = debugWindow.add("Left Error", 0).getEntry();
+    private NetworkTableEntry IntakePercent = debugWindow.add("Intake", 0).getEntry();
+    private NetworkTableEntry ConveyorBeltPercent = debugWindow.add("Conveyor Belt", 0).getEntry();
+    private NetworkTableEntry HopperPercent = debugWindow.add("Hopper", 0).getEntry();
+
+/*    private NetworkTableEntry velocityLeftError = debugWindow.add("Left Error", 0).getEntry();
     private NetworkTableEntry velocityRightError = debugWindow.add("Right Error", 0).getEntry();
     private NetworkTableEntry velocity_left = debugWindow.add("velocity right", 0).withWidget("Velocity Left").getEntry();
     private NetworkTableEntry velocity_right = debugWindow.add("velocity left", 0).withWidget("Velocity Right").getEntry();
-     
+     */
 
   private Joystick joy_left = new Joystick(Constants.joystick_left);
   private Joystick joy_right = new Joystick(Constants.joystick_right);
@@ -73,33 +72,56 @@ public class RobotContainer {
 
   private Auto1 auto;
 
-  /**
-   * The container for the robot.  Contains subsystems, OI devices, and commands.
-   */
   public RobotContainer() {
     // Configure the button bindings
     configureButtonBindings();
-    PDP.clearStickyFaults();
+    //PDP.clearStickyFaults();
     SolenoidBase.clearAllPCMStickyFaults(0);
   }
 
   private void configureButtonBindings() {
+    /*
     intakeButton.whenPressed(intakeBalls);
     hopperButton.whenPressed(forwardHopper);
     hopperButton.whenInactive(backHopper);
+   */
   }
 
   public void TeleopDrive(){
+    intake.setConveyor(0.5);
     drive.rainbowDrive(joy_left.getY(), Math.atan(joy_right.getY()/joy_right.getX()) + Math.PI/2, joy_right.getMagnitude(), joy_right.getZ(), joy_right.getX() > 0);
     //drive.bangDrive(joy_left.getY(), Math.sin(getAngle(joy_right)), joy_left.getZ()>0.5); // create buffer time so it will take time for it switch
   }
-
   public void shooterTeleop(){
-    shoot.setPercent(-xbox.getTriggerAxis(Hand.kLeft));
+    if(xbox.getTriggerAxis(Hand.kLeft)>0.2){
+      shoot.setPercent(-xbox.getTriggerAxis(Hand.kLeft));
+      intake.setHopper(0.5);
+    }
+    else{
+      intake.setHopper(-0.2);
+    }
   }
 
   public void calibrateTester(){
-    double vel = velocity.getDouble(0);
+    double iPercent = IntakePercent.getDouble(0);
+    double hPercent = HopperPercent.getDouble(0);
+    double cPercent = ConveyorBeltPercent.getDouble(0);
+    if(xbox.getAButton()){
+   // intake.setConveyor(cPercent);
+    intake.setIntakeSpeed(iPercent);
+    //intake.setHopper(hPercent);
+    System.out.println("A button is being pressed");
+    }
+    else{
+     // intake.setConveyor(0);
+      intake.setIntakeSpeed(0);
+    //  intake.setHopper(0);
+      System.out.println("A button is not being pressed");
+    }
+       
+    System.out.println("Intake: " + iPercent + "; Hopper: " + hPercent + "; Conveyor: " + cPercent);
+
+   /*
     double vel_right = drive.getSpeedRight();
     double vel_left = drive.getSpeedLeft();
     velocity_right.setDouble(vel_right);
@@ -108,6 +130,7 @@ public class RobotContainer {
     velocityRightError.setDouble(Mathz.AbsoluteError(vel, vel_left));
 
     drive.calibratePeriodic(kP1.getDouble(0), kD1.getDouble(0), kP2.getDouble(0), kD2.getDouble(0), vel);
+    */
   }
 
   /**
@@ -116,7 +139,6 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    
     return auto;
   }
 

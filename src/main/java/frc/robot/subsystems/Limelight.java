@@ -18,7 +18,7 @@ public class Limelight extends SubsystemBase{
         tx = table.getEntry("tx");
         ty = table.getEntry("ty");
         ta = table.getEntry("ta");
-        setLED(1);
+        setLED(2);
     }
 
     @Override
@@ -40,7 +40,7 @@ public class Limelight extends SubsystemBase{
 
     public boolean isConnected(){
         return gety() != 999;
-    } 
+    }  
 
     /*
     @param int state: ledMode state
