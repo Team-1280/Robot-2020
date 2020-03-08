@@ -20,15 +20,15 @@ public final class Constants {
     ID# 4-5: Shooter 
    */
 
-    public static final int CANLeftTalon = 0;
-    public static final int CANRightTalon = 3;
-    public static final int CANLeftVictor = 1;
-    public static final int CANRightVictor = 2;
-    public static final int CANLeftShooter = 4;
-    public static final int CANRightShooter = 5;
-    public static final int CANBallSysIntake = 6;
-    public static final int CANBallSysHopper = 7;
-    public static final int CANBallSysConveyor = 8;
+    public static final int CANLeftTalon = 2;
+    public static final int CANRightTalon = 1;
+    public static final int CANLeftVictor = 3;
+    public static final int CANRightVictor = 0;
+    public static final int CANLeftShooter = 14;
+    public static final int CANRightShooter = 15;
+    public static final int CANBallSysIntake = 11;
+    public static final int CANBallSysHopper = 13;
+    //public static final int CANBallSysConveyor = 8;
 
 
     // CAN bus timings
@@ -43,9 +43,10 @@ public final class Constants {
 //-----------------------------------------------------
 //Robot Ports
 //------------------------------------------------------
-    public static final int PWMDeployer = 0;
-    public static final int PWMClimbMtr1 = 1;
+    public static final int PWMDeployer = 2;
+    public static final int PWMClimbMtr1 = 0;
     public static final int PWMClimbMtr2 = 2;
+    public static final int PWMConveyorBelt= 3;
 
     public static final int DIOphotoElectric = 0;
 

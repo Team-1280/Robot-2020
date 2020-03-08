@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.SolenoidBase;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -38,7 +39,7 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final Drive drive = new Drive();
   private final Shooter shoot = new Shooter();
-  private final Intake intake = new Intake(PDP);
+  private final Intake intake = new Intake();
 
   private final Limelight limelight = new Limelight();
 
@@ -50,17 +51,17 @@ public class RobotContainer {
   private ShuffleboardTab window = Shuffleboard.getTab("Drive");
   private NetworkTableEntry example = window.add("Example Entry", 0).getEntry();
 
-     // smaller the value, higher the sensitivity adjustment
-     private ShuffleboardTab debugWindow = Shuffleboard.getTab("Autonomous Selection");
-     private NetworkTableEntry kP1 = debugWindow.add("kP1", 0).getEntry();
-     private NetworkTableEntry kD1 = debugWindow.add("kD1", 0).getEntry();
-     private NetworkTableEntry kP2 = debugWindow.add("kP2", 0).getEntry();
-     private NetworkTableEntry kD2 = debugWindow.add("kD2", 0).getEntry();
-     private NetworkTableEntry velocity = debugWindow.add("Velocity", 0).getEntry();
-     private NetworkTableEntry velocityLeftError = debugWindow.add("Left Error", 0).getEntry();
-     private NetworkTableEntry velocityRightError = debugWindow.add("Right Error", 0).getEntry();
-     private NetworkTableEntry velocity_left = debugWindow.add("velocity right", 0).withWidget("Velocity Left").getEntry();
-     private NetworkTableEntry velocity_right = debugWindow.add("velocity left", 0).withWidget("Velocity Right").getEntry();
+    // smaller the value, higher the sensitivity adjustment
+    private ShuffleboardTab debugWindow = Shuffleboard.getTab("Autonomous Selection");
+    private NetworkTableEntry kP1 = debugWindow.add("kP1", 0).getEntry();
+    private NetworkTableEntry kD1 = debugWindow.add("kD1", 0).getEntry();
+    private NetworkTableEntry kP2 = debugWindow.add("kP2", 0).getEntry();
+    private NetworkTableEntry kD2 = debugWindow.add("kD2", 0).getEntry();
+    private NetworkTableEntry velocity = debugWindow.add("Velocity", 0).getEntry();
+    private NetworkTableEntry velocityLeftError = debugWindow.add("Left Error", 0).getEntry();
+    private NetworkTableEntry velocityRightError = debugWindow.add("Right Error", 0).getEntry();
+    private NetworkTableEntry velocity_left = debugWindow.add("velocity right", 0).withWidget("Velocity Left").getEntry();
+    private NetworkTableEntry velocity_right = debugWindow.add("velocity left", 0).withWidget("Velocity Right").getEntry();
      
 
   private Joystick joy_left = new Joystick(Constants.joystick_left);
@@ -68,7 +69,6 @@ public class RobotContainer {
   private XboxController xbox = new XboxController(Constants.Xbox);
 
   private JoystickButton intakeButton = new JoystickButton(xbox, 1);
-
   private JoystickButton hopperButton = new JoystickButton(xbox, 2);
 
   private Auto1 auto;
@@ -92,6 +92,10 @@ public class RobotContainer {
   public void TeleopDrive(){
     drive.rainbowDrive(joy_left.getY(), Math.atan(joy_right.getY()/joy_right.getX()) + Math.PI/2, joy_right.getMagnitude(), joy_right.getZ(), joy_right.getX() > 0);
     //drive.bangDrive(joy_left.getY(), Math.sin(getAngle(joy_right)), joy_left.getZ()>0.5); // create buffer time so it will take time for it switch
+  }
+
+  public void shooterTeleop(){
+    shoot.setPercent(-xbox.getTriggerAxis(Hand.kLeft));
   }
 
   public void calibrateTester(){
@@ -138,12 +142,12 @@ public class RobotContainer {
     SmartDashboard.putNumber("Shooter offset from the middle of the goal: ", limelight.gety());
     // Shuffleboard.getTab("kP1 , 0"); 
   }
-
-  public double getSystemVoltage(){
+/*  public double getSystemVoltage(){
     return PDP.getVoltage();
   }
 
   public double getTotalCurrent(){
       return PDP.getTotalCurrent();
   }
+  */
 }

@@ -89,6 +89,12 @@ public class Shooter extends SubsystemBase{
 		return Mathz.RPMtoTPS(talon_right.getSensorCollection().getQuadratureVelocity());
 	}
 
+
+	public void setPercent(double percent){
+		talon_left.set(ControlMode.PercentOutput, percent);
+		talon_right.set(ControlMode.PercentOutput, percent);
+	}
+
 	public double getVoltage(){
 		return (talon_left.getMotorOutputVoltage() + talon_right.getMotorOutputVoltage())/2.0;
 	}

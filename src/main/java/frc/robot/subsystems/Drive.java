@@ -1,9 +1,11 @@
 package frc.robot.subsystems;
 
-import com.analog.adis16448.frc.ADIS16448_IMU;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.kauailabs.navx.frc.AHRS;
+import edu.wpi.first.wpilibj.SerialPort.Port;
+
 import edu.wpi.first.wpilibj.controller.RamseteController;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
@@ -21,11 +23,13 @@ import frc.robot.util.LazyVictorSPX;
 import frc.robot.util.Mathz;
 
 public class Drive extends SubsystemBase{
+    // if radhika uses magic code else wow makes the entire robot work bc I said so and my magic powers are gonna make it the bestest robot ever!!! <3 !
     private LazyTalonSRX talon_left = new LazyTalonSRX(Constants.CANLeftTalon);
     private LazyTalonSRX talon_right = new LazyTalonSRX(Constants.CANRightTalon);
     private LazyVictorSPX victor_left = new LazyVictorSPX(Constants.CANLeftVictor);
     private LazyVictorSPX victor_right = new LazyVictorSPX(Constants.CANRightVictor);
-	private ADIS16448_IMU gyro = new ADIS16448_IMU();
+    private AHRS gyro = new AHRS(Port.kMXP); /* Alternatives:  SPI.Port.kMXP, I2C.Port.kMXP or SerialPort.Port.kUSB */
+
 	
 	private DifferentialDriveOdometry odometry = new DifferentialDriveOdometry(getAngle());
 	private RamseteController ramseteController = new RamseteController(Constants.kRamseteB, Constants.kRamseteZeta);
@@ -247,7 +251,7 @@ public class Drive extends SubsystemBase{
 	}
 	
 	public Rotation2d getAngle(){
-        return new Rotation2d(Math.toRadians(gyro.getGyroAngleX()));
+        return new Rotation2d(Math.toRadians(gyro.getRawGyroX()));
 	}
     
     public double getSpeedLeft(){
@@ -265,13 +269,13 @@ public class Drive extends SubsystemBase{
         double accel = 0;
         switch(AXIS){
             case x:
-                accel = gyro.getAccelInstantX();
+                accel = gyro.getRawAccelX();
                 break; 
             case y:
-                accel = gyro.getAccelInstantY();
+                accel = gyro.getRawAccelY();
                 break; 
             case z: 
-                accel= gyro.getAccelInstantZ();
+                accel= gyro.getRawAccelZ();
                 break;
         }
         return accel;
